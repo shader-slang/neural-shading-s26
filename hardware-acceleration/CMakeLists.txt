@@ -293,10 +293,17 @@ function(add_mlp_executable TARGET_NAME SOURCE_DIR)
         ${SLANG_RHI_INCLUDE_DIR}
     )
     
-    # Copy .slang files to output directory
+    # Keep each example's shader modules in a separate directory. Both examples
+    # contain modules named `network.slang` and `kernels.slang`; placing them in
+    # a shared output directory makes the later copy overwrite the earlier one.
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/resources/${SOURCE_DIR}")
     foreach(SLANG_FILE ${SLANG_FILES})
         get_filename_component(SLANG_FILENAME ${SLANG_FILE} NAME)
-        configure_file(${SLANG_FILE} ${CMAKE_BINARY_DIR}/${SLANG_FILENAME} COPYONLY)
+        configure_file(
+            ${SLANG_FILE}
+            ${CMAKE_BINARY_DIR}/resources/${SOURCE_DIR}/${SLANG_FILENAME}
+            COPYONLY
+        )
     endforeach()
     
     # Set target properties
@@ -350,12 +357,12 @@ install(TARGETS mlp-training mlp-training-coopvec example-base
 
 # Install shader files
 install(DIRECTORY mlp-training/ 
-    DESTINATION bin
+    DESTINATION bin/resources/mlp-training
     FILES_MATCHING PATTERN "*.slang"
 )
 
 install(DIRECTORY mlp-training-coopvec/ 
-    DESTINATION bin
+    DESTINATION bin/resources/mlp-training-coopvec
     FILES_MATCHING PATTERN "*.slang"
 )
 

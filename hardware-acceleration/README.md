@@ -113,17 +113,17 @@ If external dependencies fail to download:
 
 ### Build Issues
 - Ensure you have all required build tools installed
-- Check that your compiler supports C++17
+- Check that your compiler supports C++20
 - On Windows, make sure you have the Windows SDK installed
 
 ### Platform Compatibility and Runtime Issues
 
 Platform Support:
-- Windows and Linux: Both examples are supported, coopvec requires an NVIDIA GPU
-- macOS: Only mlp-training is supported (uses Metal), coopvec is not supported
+- Windows and Linux: Both examples are supported; `mlp-training-coopvec` requires an NVIDIA GPU.
+- macOS: `mlp-training` uses Metal. `mlp-training-coopvec` is not supported because Metal does not support the cooperative-vector operations it uses.
 
 Requirements:
-- Ensure shader files (.slang) are in the same directory as the executable
+- Keep the `resources/` directory beside the executable; it contains the per-example `.slang` modules.
 - Check that your graphics drivers support Vulkan
 - For mlp-training-coopvec:
   - NVIDIA GPU is required

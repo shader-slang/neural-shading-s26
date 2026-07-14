@@ -177,7 +177,7 @@ cd hardware-acceleration/build/Release  # or build/ on Linux, this is not suppor
 ### Hardware Acceleration
 - GPU-accelerated neural network training
 - Cooperative vector intrinsics for improved performance (only on Nvidia hardware on Windows and Linux)
-- Cross-platform support (Vulkan, Metal)
+- The scalar `mlp-training` sample supports Vulkan (Windows/Linux) and Metal (macOS)
 
 ### Neural Shading
 - Real-time neural network inference in shaders
