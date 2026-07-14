@@ -66,6 +66,7 @@ struct ExampleResources
 
 int64_t getCurrentTime();
 int64_t getTimerFrequency();
+rhi::IDebugCallback* getExampleDebugCallback();
 
 template<typename... TArgs>
 inline void reportError(const char* format, TArgs... args)

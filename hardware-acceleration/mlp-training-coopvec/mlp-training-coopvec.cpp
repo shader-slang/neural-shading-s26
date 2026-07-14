@@ -83,8 +83,21 @@ struct ExampleProgram : public TestBase
         // Use Metal on macOS
         // Note however that the `coopVecOuterProductAccumulate` intrinsic is
         // not supported on metal, so this example will not run on macOS.
-        deviceDesc.slang.targetProfile = "metal_2_4";
         deviceDesc.deviceType = rhi::DeviceType::Metal;
+        static const slang::CompilerOptionEntry compilerOptions[] = {
+            {
+                slang::CompilerOptionName::DownstreamArgs,
+                {
+                    slang::CompilerOptionValueKind::String,
+                    0,
+                    0,
+                    "metal",
+                    "-std=metal4.0",
+                },
+            },
+        };
+        deviceDesc.slang.compilerOptionEntries = compilerOptions;
+        deviceDesc.slang.compilerOptionEntryCount = 1;
         // Add preprocessor macro for Apple devices
         static const slang::PreprocessorMacroDesc defines[] = {
             {"__SLANG_APPLE__", "1"},
@@ -99,6 +112,7 @@ struct ExampleProgram : public TestBase
 #endif
         deviceDesc.slang.preprocessorMacros = defines;
         deviceDesc.slang.preprocessorMacroCount = 1;
+        deviceDesc.debugCallback = getExampleDebugCallback();
 
         gDevice = rhi::getRHI()->createDevice(deviceDesc);
         if (!gDevice)

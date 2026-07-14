@@ -74,6 +74,7 @@ This course covers the fundamentals of neural shading using Slang. The materials
 - CMake 3.20 or later
 - C++20 compatible compiler
 - Graphics driver supporting Vulkan (or Metal on macOS, note that cooperative vector is not supported on Metal)
+- On macOS, a Metal 4-capable Xcode Metal Toolchain for the scalar `mlp-training` sample
 - Git
 
 ## Installation

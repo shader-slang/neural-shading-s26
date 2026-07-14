@@ -11,6 +11,7 @@ SIGGRAPH 2026. This project includes two implementations of neural network (MLP)
 - CMake 3.20 or later
 - C++20 compatible compiler
 - Internet connection for downloading external dependencies
+- On macOS, a Metal 4-capable Xcode Metal Toolchain to run `mlp-training`
 
 ## External Dependencies
 
