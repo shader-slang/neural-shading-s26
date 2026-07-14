@@ -11,15 +11,15 @@ struct MaterialParameters
 
     float3 get_albedo(int2 pixel)
     {
-        return albedo.getv(pixel);
+        return albedo.load(pixel);
     }
     float3 get_normal(int2 pixel)
     {
-        return normalize(normal.getv(pixel));
+        return normalize(normal.load(pixel));
     }
     float get_roughness(int2 pixel)
     {
-        return roughness.getv(pixel);
+        return roughness.load(pixel);
     }
 };
 
