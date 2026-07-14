@@ -1,15 +1,15 @@
 # Neural Shading Hardware Acceleration
 
 This folder contains the source code used in the "Hardware Acceleration" section of the "Introduction to Neural Shading" course at
-SIGGRAPH 2025. This project includes two implementations of neural network (MLP) training using Slang and slang-rhi.
+SIGGRAPH 2026. This project includes two implementations of neural network (MLP) training using Slang and slang-rhi.
 
-`mlp-trainining/` contains the shader and host-side C++ code to train an MLP without using any special intrinsics.
-`mlp-training-coopvec/` is a modified version of `mlp-trainining` that uses cooperative vectors to speed up inferencing and training.
+`mlp-training/` contains the shader and host-side C++ code to train an MLP without using any special intrinsics.
+`mlp-training-coopvec/` is a modified version of `mlp-training/` that uses cooperative vectors to speed up inference and training.
 
 ## Build Requirements
 
 - CMake 3.20 or later
-- C++17 compatible compiler (Visual Studio 2019+ on Windows, GCC 7+ or Clang 5+ on Linux)
+- C++20 compatible compiler
 - Internet connection for downloading external dependencies
 
 ## External Dependencies
@@ -49,7 +49,6 @@ If you prefer to set up manually:
 
 1. **Initialize submodules**:
    ```bash
-   git submodule add https://github.com/shader-slang/slang-rhi.git external/slang-rhi
    git submodule update --init --recursive
    ```
 

@@ -138,11 +138,11 @@ struct ExampleProgram : public TestBase
         // Allocate storage for network parameters, filling in `layerRowMajorAllocations`,
         // `networkParamsBufferSize`, `networkGraidentOffset` and `networkGradientTrainingOffset`.
         //
-        allocateNetworkParameterStorage(
+        SLANG_RETURN_ON_FAIL(allocateNetworkParameterStorage(
             layerAllocations,
             networkParamsBufferSize,
             networkGraidentOffset,
-            networkGradientTrainingOffset);
+            networkGradientTrainingOffset));
 
         // We'll initialize the buffer with random values in the range [-1, 1].
         std::vector<uint16_t> initParams;
@@ -220,29 +220,36 @@ struct ExampleProgram : public TestBase
             // Copy weight gradients from training-optimal layout to row-major layout,
             // so we can read them in the `adjustParameters` kernel.
             {
-                std::vector<rhi::ConvertCooperativeVectorMatrixDesc> matrixDescs;
+                std::vector<rhi::CooperativeVectorMatrixDesc> dstMatrixDescs;
+                std::vector<rhi::CooperativeVectorMatrixDesc> srcMatrixDescs;
                 for (int i = 0; i < kLayerCount; i++)
                 {
-                    rhi::ConvertCooperativeVectorMatrixDesc desc = {};
-                    desc.rowCount = kLayerSizes[i + 1];
-                    desc.colCount = kLayerSizes[i];
-                    desc.dstComponentType = rhi::CooperativeVectorComponentType::Float16;
-                    desc.dstSize = &layerAllocations[i].weightsSize;
-                    desc.dstData.deviceAddress = networkParamsBuffer->getDeviceAddress() +
-                                                 layerAllocations[i].weightsGradOffset;
-                    desc.dstLayout = rhi::CooperativeVectorMatrixLayout::RowMajor;
-                    desc.dstStride = getNetworkLayerWeightStride(i);
-                    desc.srcComponentType = rhi::CooperativeVectorComponentType::Float16;
-                    desc.srcSize = layerAllocations[i].weightsGradTrainingSize;
-                    desc.srcData.deviceAddress = networkParamsBuffer->getDeviceAddress() +
-                                                 layerAllocations[i].weightsGradTrainingOffset;
-                    desc.srcLayout = rhi::CooperativeVectorMatrixLayout::TrainingOptimal;
-                    matrixDescs.push_back(desc);
+                    dstMatrixDescs.push_back({
+                        uint32_t(kLayerSizes[i + 1]),
+                        uint32_t(kLayerSizes[i]),
+                        rhi::CooperativeVectorComponentType::Float16,
+                        rhi::CooperativeVectorMatrixLayout::RowMajor,
+                        layerAllocations[i].weightsSize,
+                        layerAllocations[i].weightsGradOffset,
+                        size_t(getNetworkLayerWeightStride(i)),
+                    });
+                    srcMatrixDescs.push_back({
+                        uint32_t(kLayerSizes[i + 1]),
+                        uint32_t(kLayerSizes[i]),
+                        rhi::CooperativeVectorComponentType::Float16,
+                        rhi::CooperativeVectorMatrixLayout::TrainingOptimal,
+                        layerAllocations[i].weightsGradTrainingSize,
+                        layerAllocations[i].weightsGradTrainingOffset,
+                        0,
+                    });
                 }
                 auto encoder = queue->createCommandEncoder();
                 encoder->convertCooperativeVectorMatrix(
-                    matrixDescs.data(),
-                    (uint32_t)matrixDescs.size());
+                    networkParamsBuffer,
+                    dstMatrixDescs.data(),
+                    networkParamsBuffer,
+                    srcMatrixDescs.data(),
+                    (uint32_t)srcMatrixDescs.size());
                 ComPtr<rhi::ICommandBuffer> commandBuffer;
                 encoder->finish(commandBuffer.writeRef());
                 queue->submit(commandBuffer);
@@ -275,7 +282,7 @@ struct ExampleProgram : public TestBase
     }
 
     // Allocate storage for network parameters, including weights, biases, and gradients.
-    void allocateNetworkParameterStorage(
+    SlangResult allocateNetworkParameterStorage(
         std::vector<NetworkParameterAllocation>& paramStorage,
         size_t& outParamBufferSize,
         size_t& outGradientOffset,
@@ -315,23 +322,17 @@ struct ExampleProgram : public TestBase
         for (int i = 0; i < kLayerCount; i++)
         {
             // Allocate space for gradients in training-optimal layout.
-            rhi::ConvertCooperativeVectorMatrixDesc matrixDesc = {};
-            matrixDesc.srcComponentType = rhi::CooperativeVectorComponentType::Float16;
-            matrixDesc.srcSize = paramStorage[i].weightsSize;
-            matrixDesc.srcData.hostAddress = nullptr;
-            matrixDesc.srcLayout = rhi::CooperativeVectorMatrixLayout::RowMajor;
-            matrixDesc.srcStride = getNetworkLayerWeightStride(i);
-            matrixDesc.dstComponentType = rhi::CooperativeVectorComponentType::Float16;
-            matrixDesc.dstSize = &paramStorage[i].weightsGradTrainingSize;
-            matrixDesc.dstData.hostAddress = nullptr;
-            matrixDesc.dstLayout = rhi::CooperativeVectorMatrixLayout::TrainingOptimal;
-            matrixDesc.dstStride = 0;
-            matrixDesc.rowCount = kLayerSizes[i + 1];
-            matrixDesc.colCount = kLayerSizes[i];
-            gDevice->convertCooperativeVectorMatrix(&matrixDesc, 1);
+            SLANG_RETURN_ON_FAIL(gDevice->getCooperativeVectorMatrixSize(
+                kLayerSizes[i + 1],
+                kLayerSizes[i],
+                rhi::CooperativeVectorComponentType::Float16,
+                rhi::CooperativeVectorMatrixLayout::TrainingOptimal,
+                0,
+                &paramStorage[i].weightsGradTrainingSize));
             paramStorage[i].weightsGradTrainingOffset =
                 allocRowMajorStorage(paramStorage[i].weightsGradTrainingSize);
         }
+        return SLANG_OK;
     }
 
     // Dispatch a compute kernel with the given arguments and number of work groups.

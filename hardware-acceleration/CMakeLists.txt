@@ -65,7 +65,7 @@ function(download_github_release REPO_URL TAG_NAME TARGET_DIR)
 endfunction()
 
 # Download external dependencies
-set(SLANG_VERSION "v2026.13")  # Adjust version as needed
+set(SLANG_VERSION "v2026.12")
 
 set(SLANG_DIR "${CMAKE_BINARY_DIR}/external/slang")
 set(SLANG_RHI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external/slang-rhi")
@@ -80,7 +80,6 @@ download_github_release("https://github.com/shader-slang/slang" ${SLANG_VERSION}
 if(NOT EXISTS "${SLANG_RHI_DIR}/CMakeLists.txt")
     message(FATAL_ERROR 
         "slang-rhi submodule not found. Please initialize it with:\n"
-        "  git submodule add https://github.com/shader-slang/slang-rhi.git external/slang-rhi\n"
         "  git submodule update --init --recursive"
     )
 endif()
@@ -89,7 +88,6 @@ endif()
 if(NOT EXISTS "${LZ4_DIR}/build/cmake/CMakeLists.txt")
     message(FATAL_ERROR 
         "lz4 submodule not found. Please initialize it with:\n"
-        "  git submodule add https://github.com/lz4/lz4.git external/lz4\n"
         "  git submodule update --init --recursive"
     )
 endif()
@@ -98,7 +96,6 @@ endif()
 if(NOT EXISTS "${MINIZ_DIR}/CMakeLists.txt")
     message(FATAL_ERROR 
         "miniz submodule not found. Please initialize it with:\n"
-        "  git submodule add https://github.com/richgel999/miniz.git external/miniz\n"
         "  git submodule update --init --recursive"
     )
 endif()
@@ -107,7 +104,6 @@ endif()
 if(NOT EXISTS "${UNORDERED_DENSE_DIR}/CMakeLists.txt")
     message(FATAL_ERROR 
         "unordered_dense submodule not found. Please initialize it with:\n"
-        "  git submodule add https://github.com/martinus/unordered_dense.git external/unordered_dense\n"
         "  git submodule update --init --recursive"
     )
 endif()
@@ -115,8 +111,7 @@ endif()
 # Add slang-rhi as subdirectory (build from source)
 add_subdirectory(${SLANG_RHI_DIR})
 
-# The pinned slang-rhi predates Slang 2026.13 and emits compatibility warnings against its
-# expanded reflection API. Keep those warnings visible without promoting them to build errors.
+# Keep slang-rhi warnings visible without promoting them to build errors.
 set_property(TARGET slang-rhi-warnings-as-errors PROPERTY INTERFACE_COMPILE_OPTIONS "")
 
 # Set slang-rhi to use C++17 while everything else uses C++20
@@ -323,8 +318,7 @@ function(add_mlp_executable TARGET_NAME SOURCE_DIR)
             SLANG_EXAMPLE_NAME=${TARGET_NAME}
         )
 
-        # Slang 2026.13 splits compiler functionality across additional runtime DLLs that are not
-        # known to the pinned slang-rhi revision. Keep the complete runtime set beside the sample.
+        # Keep the complete Slang runtime set beside the sample executable.
         file(GLOB SLANG_RUNTIME_DLLS CONFIGURE_DEPENDS
             "${SLANG_RHI_SLANG_BINARY_DIR}/bin/*.dll"
         )

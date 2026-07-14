@@ -43,11 +43,11 @@ fi
 
 # Configure the project
 echo "Configuring project..."
-cmake -B "$BUILD_DIR" -G "$CMAKE_GENERATOR" -DCMAKE_BUILD_TYPE=Release -DSLANG_RHI_FETCH_SLANG_VERSION=2026.13
+cmake -B "$BUILD_DIR" -G "$CMAKE_GENERATOR" -DCMAKE_BUILD_TYPE=Release -DSLANG_RHI_FETCH_SLANG_VERSION=2026.12
 
 # Build the project
 echo "Building project..."
-cmake --build "$BUILD_DIR" --config Release -j$(nproc)
+cmake --build "$BUILD_DIR" --config Release --parallel
 
 echo "Build completed successfully!"
 echo "Executables can be found in: $BUILD_DIR/"

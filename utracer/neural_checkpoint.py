@@ -9,7 +9,7 @@ from typing import Mapping
 import numpy as np
 import slangpy as spy
 
-from train.linear_layer import LinearLayer
+from neural.common.linear_layer import LinearLayer
 
 
 NUM_LATENTS = 8
