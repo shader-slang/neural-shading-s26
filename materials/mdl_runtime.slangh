@@ -1,0 +1,490 @@
+// This file is adapted from the DXR example in the MDL SDK:
+// https://github.com/NVIDIA/MDL-SDK/blob/master/examples/mdl_sdk/dxr/content/mdl_renderer_runtime.hlsl
+
+#pragma once
+
+struct MDLRendererState
+{
+    float3 V; // View direction
+};
+
+#define RENDERER_STATE_TYPE MDLRendererState
+
+#include "materials/mdl_target_code_types.slangh"
+
+import mdl_material_data;
+
+#ifndef MATERIAL_DATA_NAME
+#define MATERIAL_DATA_NAME g_material_data
+#endif
+
+ParameterBlock<MaterialData> MATERIAL_DATA_NAME;
+
+/// Information passed to the GPU for each light profile resource
+struct Mdl_light_profile_info
+{
+    // angular resolution of the grid and its inverse
+    uint2 angular_resolution;
+    float2 inv_angular_resolution;
+
+    // starting angles of the grid
+    float2 theta_phi_start;
+
+    // angular step size and its inverse
+    float2 theta_phi_delta;
+    float2 theta_phi_inv_delta;
+
+    // factor to rescale the normalized data
+    // also represents the maximum candela value of the data
+    float candela_multiplier;
+
+    // power (radiant flux)
+    float total_power;
+
+    // index into the textures_2d array
+    // -  texture contains normalized data sampled on grid
+    uint eval_data_index;
+
+    // index into the buffers
+    // - CDFs for sampling a light profile
+    uint sample_data_index;
+};
+
+/// Information passed to the GPU for each BSDF measurement resource
+struct Mdl_mbsdf_info
+{
+    // if the MBSDF has data for reflection (0) and transmission (1)
+    uint2 has_data;
+
+    // index into the texture_3d array for both parts
+    // - texture contains the measurement values for evaluation
+    uint2 eval_data_index;
+
+    // indices into the buffers array for both parts
+    // - sample_data buffer contains CDFs for sampling
+    // - albedo_data buffer contains max albedos for each theta (isotropic)
+    uint2 sample_data_index;
+    uint2 albedo_data_index;
+
+    // maximum albedo values for both parts, used for limiting the multiplier
+    float2 max_albedo;
+
+    // discrete angular resolution for both parts
+    uint2 angular_resolution_theta;
+    uint2 angular_resolution_phi;
+
+    // number of color channels (1 for scalar, 3 for rgb) for both parts
+    uint2 num_channels;
+};
+
+// -----------------------------------------------------------------------------
+// Argument block access for dynamic parameters in class compilation mode.
+// -----------------------------------------------------------------------------
+
+float mdl_read_argblock_as_float(uint offs)
+{
+    return MATERIAL_DATA_NAME.arg_block_load<float>(offs);
+}
+
+double mdl_read_argblock_as_double(uint offs)
+{
+    return MATERIAL_DATA_NAME.arg_block_load<double>(offs);
+}
+
+int mdl_read_argblock_as_int(uint offs)
+{
+    return MATERIAL_DATA_NAME.arg_block_load<int>(offs);
+}
+
+uint mdl_read_argblock_as_uint(uint offs)
+{
+    return MATERIAL_DATA_NAME.arg_block_load<uint>(offs);
+}
+
+bool mdl_read_argblock_as_bool(uint offs)
+{
+    uint val = MATERIAL_DATA_NAME.arg_block_load<uint>((offs & ~3));
+    return (val & (0xffU << (8 * (offs & 3)))) != 0;
+}
+
+// -----------------------------------------------------------------------------
+// Read-only data access.
+// -----------------------------------------------------------------------------
+
+float mdl_read_rodata_as_float(uint offs)
+{
+    return MATERIAL_DATA_NAME.read_only_data_load<float>(offs);
+}
+
+double mdl_read_rodata_as_double(uint offs)
+{
+    return MATERIAL_DATA_NAME.read_only_data_load<double>(offs);
+}
+
+int mdl_read_rodata_as_int(uint offs)
+{
+    return MATERIAL_DATA_NAME.read_only_data_load<int>(offs);
+}
+
+uint mdl_read_rodata_as_uint(uint offs)
+{
+    return MATERIAL_DATA_NAME.read_only_data_load<uint>(offs);
+}
+
+bool mdl_read_rodata_as_bool(uint offs)
+{
+    uint val = MATERIAL_DATA_NAME.read_only_data_load<uint>((offs & ~3));
+    return (val & (0xffU << (8 * (offs & 3)))) != 0;
+}
+
+// -----------------------------------------------------------------------------
+// Texturing functions.
+// -----------------------------------------------------------------------------
+
+// corresponds to ::tex::texture_isvalid(uniform texture_2d tex)
+// corresponds to ::tex::texture_isvalid(uniform texture_3d tex)
+// corresponds to ::tex::texture_isvalid(uniform texture_cube tex) // not supported
+// corresponds to ::tex::texture_isvalid(uniform texture_ptex tex) // not supported
+bool tex_texture_isvalid(uint tex)
+{
+    // assuming that there is no indexing out of bounds of the resource_infos and the view arrays
+    return tex != 0; // invalid texture
+}
+
+// helper function to realize wrap and crop.
+// Out of bounds case for TEX_WRAP_CLIP must already be handled.
+float apply_wrap_and_crop(float coord, int wrap, float2 crop, int res)
+{
+    if (wrap != TEX_WRAP_REPEAT || any(crop != float2(0, 1)))
+    {
+        if (wrap == TEX_WRAP_REPEAT)
+        {
+            coord -= floor(coord);
+        }
+        else
+        {
+            if (wrap == TEX_WRAP_MIRRORED_REPEAT)
+            {
+                float floored_val = floor(coord);
+                if ((int(floored_val) & 1) != 0)
+                    coord = 1 - (coord - floored_val);
+                else
+                    coord -= floored_val;
+            }
+            float inv_hdim = 0.5f / float(res);
+            coord = clamp(coord, inv_hdim, 1.f - inv_hdim);
+        }
+        coord = coord * (crop.y - crop.x) + crop.x;
+    }
+    return coord;
+}
+
+// Modify texture coordinates to get better texture filtering,
+// see http://www.iquilezles.org/www/articles/texture/texture.htm
+float2 apply_smootherstep_filter(float2 uv, uint2 size)
+{
+    float2 res;
+    res = uv * size + 0.5f;
+
+    float u_i = floor(res.x), v_i = floor(res.y);
+    float u_f = res.x - u_i;
+    float v_f = res.y - v_i;
+    u_f = u_f * u_f * u_f * (u_f * (u_f * 6.f - 15.f) + 10.f);
+    v_f = v_f * v_f * v_f * (v_f * (v_f * 6.f - 15.f) + 10.f);
+    res.x = u_i + u_f;
+    res.y = v_i + v_f;
+
+    res = (res - 0.5f) / size;
+    return res;
+}
+
+// -----------------------------------------------------------------------------
+// Texturing functions, 2D
+// -----------------------------------------------------------------------------
+
+uint2 tex_res_2d(uint tex, int2 uv_tile, float frame)
+{
+    if (tex == 0)
+        return uint2(0, 0); // invalid texture
+
+    let texture = MATERIAL_DATA_NAME.textures_2d[tex - 1];
+
+    uint width, height;
+    texture.GetDimensions(width, height);
+    return uint2(width, height);
+}
+
+// corresponds to ::tex::width(uniform texture_2d tex, int2 uv_tile, float frame)
+uint tex_width_2d(uint tex, int2 uv_tile, float frame)
+{
+    return tex_res_2d(tex, uv_tile, frame).x;
+}
+
+// corresponds to ::tex::height(uniform texture_2d tex, int2 uv_tile)
+uint tex_height_2d(uint tex, int2 uv_tile, float frame)
+{
+    return tex_res_2d(tex, uv_tile, frame).y;
+}
+
+// corresponds to ::tex::first__frame(uniform texture_2d)
+int tex_first_frame_2d(uint tex)
+{
+    if (tex == 0)
+        return 0; // invalid texture
+
+    return 0;
+}
+
+// corresponds to ::tex::last_frame(uniform texture_2d)
+int tex_last_frame_2d(uint tex)
+{
+    if (tex == 0)
+        return 0; // invalid texture
+
+    return 0;
+}
+
+// corresponds to ::tex::lookup_float4(uniform texture_2d tex, float2 coord, ...)
+public float4 tex_lookup_float4_2d(uint tex, float2 coord, int wrap_u, int wrap_v, float2 crop_u, float2 crop_v, float frame)
+{
+    if (tex == 0)
+        return float4(0, 0, 0, 0); // invalid texture
+
+    if (wrap_u == TEX_WRAP_CLIP && (coord.x < 0.0 || coord.x >= 1.0))
+        return float4(0, 0, 0, 0);
+    if (wrap_v == TEX_WRAP_CLIP && (coord.y < 0.0 || coord.y >= 1.0))
+        return float4(0, 0, 0, 0);
+
+    let texture = MATERIAL_DATA_NAME.textures_2d[tex - 1];
+
+    uint width, height;
+    texture.GetDimensions(width, height);
+    coord.x = apply_wrap_and_crop(coord.x, wrap_u, crop_u, width);
+    coord.y = apply_wrap_and_crop(coord.y, wrap_v, crop_v, height);
+
+    coord = apply_smootherstep_filter(coord, uint2(width, height));
+
+    return texture.SampleLevel(MATERIAL_DATA_NAME.sampler_state, coord, /*lod=*/0.0f, /*offset=*/int2(0, 0));
+}
+
+float3 tex_lookup_float3_2d(uint tex, float2 coord, int wrap_u, int wrap_v, float2 crop_u, float2 crop_v, float frame)
+{
+    return tex_lookup_float4_2d(tex, coord, wrap_u, wrap_v, crop_u, crop_v, frame).xyz;
+}
+
+float3 tex_lookup_color_2d(uint tex, float2 coord, int wrap_u, int wrap_v, float2 crop_u, float2 crop_v, float frame)
+{
+    return tex_lookup_float4_2d(tex, coord, wrap_u, wrap_v, crop_u, crop_v, frame).xyz;
+}
+
+float2 tex_lookup_float2_2d(uint tex, float2 coord, int wrap_u, int wrap_v, float2 crop_u, float2 crop_v, float frame)
+{
+    return tex_lookup_float4_2d(tex, coord, wrap_u, wrap_v, crop_u, crop_v, frame).xy;
+}
+
+float tex_lookup_float_2d(uint tex, float2 coord, int wrap_u, int wrap_v, float2 crop_u, float2 crop_v, float frame)
+{
+    return tex_lookup_float4_2d(tex, coord, wrap_u, wrap_v, crop_u, crop_v, frame).x;
+}
+
+// corresponds to ::tex::texel_float4(uniform texture_2d tex, float2 coord, int2 uv_tile)
+float4 tex_texel_float4_2d(uint tex, int2 coord, int2 uv_tile, float frame)
+{
+    if (tex == 0)
+        return float4(0, 0, 0, 0); // invalid texture
+
+    let texture = MATERIAL_DATA_NAME.textures_2d[tex - 1];
+    uint width, height;
+    texture.GetDimensions(width, height);
+
+    if (0 > coord.x || width <= coord.x || 0 > coord.y || height <= coord.y)
+        return float4(0, 0, 0, 0); // out of bounds
+
+    return texture.Load(int3(coord, /*mipmaplevel=*/ 0));
+}
+
+float3 tex_texel_float3_2d(uint tex, int2 coord, int2 uv_tile, float frame)
+{
+    return tex_texel_float4_2d(tex, coord, uv_tile, frame).xyz;
+}
+
+float3 tex_texel_color_2d(uint tex, int2 coord, int2 uv_tile, float frame)
+{
+    return tex_texel_float3_2d(tex, coord, uv_tile, frame);
+}
+
+float2 tex_texel_float2_2d(uint tex, int2 coord, int2 uv_tile, float frame)
+{
+    return tex_texel_float4_2d(tex, coord, uv_tile, frame).xy;
+}
+
+float tex_texel_float_2d(uint tex, int2 coord, int2 uv_tile, float frame)
+{
+    return tex_texel_float4_2d(tex, coord, uv_tile, frame).x;
+}
+
+// -----------------------------------------------------------------------------
+// Texturing functions, 3D
+// -----------------------------------------------------------------------------
+
+uint3 tex_res_3d(uint tex, float frame)
+{
+    // Not used in the current materials.
+    return uint3(0, 0, 0);
+}
+
+// corresponds to ::tex::first__frame(uniform texture_3d)
+int tex_first_frame_3d(uint tex)
+{
+    // Not used in the current materials.
+    return 0;
+}
+
+// corresponds to ::tex::last_frame(uniform texture_3d)
+int tex_last_frame_3d(uint tex)
+{
+    // Not used in the current materials.
+    return 0;
+}
+
+// corresponds to ::tex::width(uniform texture_3d tex, int2 uv_tile)
+uint tex_width_3d(uint tex, float frame)
+{
+    return tex_res_3d(tex, frame).x;
+}
+
+// corresponds to ::tex::height(uniform texture_3d tex, int2 uv_tile)
+uint tex_height_3d(uint tex, float frame)
+{
+    return tex_res_3d(tex, frame).y;
+}
+
+// corresponds to ::tex::depth(uniform texture_3d tex, int2 uv_tile)
+uint tex_depth_3d(uint tex, float frame)
+{
+    return tex_res_3d(tex, frame).z;
+}
+
+// corresponds to ::tex::lookup_float4(uniform texture_3d tex, float2 coord, ...)
+float4 tex_lookup_float4_3d(
+    uint tex,
+    float3 coord,
+    int wrap_u,
+    int wrap_v,
+    int wrap_w,
+    float2 crop_u,
+    float2 crop_v,
+    float2 crop_w,
+    float frame)
+{
+    // Not used in the current materials.
+    return float4(0, 0, 0, 0);
+}
+
+float3 tex_lookup_float3_3d(
+    uint tex,
+    float3 coord,
+    int wrap_u,
+    int wrap_v,
+    int wrap_w,
+    float2 crop_u,
+    float2 crop_v,
+    float2 crop_w,
+    float frame)
+{
+    return tex_lookup_float4_3d(tex, coord, wrap_u, wrap_v, wrap_w, crop_u, crop_v, crop_w, frame).xyz;
+}
+
+float3 tex_lookup_color_3d(
+    uint tex,
+    float3 coord,
+    int wrap_u,
+    int wrap_v,
+    int wrap_w,
+    float2 crop_u,
+    float2 crop_v,
+    float2 crop_w,
+    float frame)
+{
+    return tex_lookup_float4_3d(tex, coord, wrap_u, wrap_v, wrap_w, crop_u, crop_v, crop_w, frame).xyz;
+}
+
+float2 tex_lookup_float2_3d(
+    uint tex,
+    float3 coord,
+    int wrap_u,
+    int wrap_v,
+    int wrap_w,
+    float2 crop_u,
+    float2 crop_v,
+    float2 crop_w,
+    float frame)
+{
+    return tex_lookup_float4_3d(tex, coord, wrap_u, wrap_v, wrap_w, crop_u, crop_v, crop_w, frame).xy;
+}
+
+float tex_lookup_float_3d(
+    uint tex,
+    float3 coord,
+    int wrap_u,
+    int wrap_v,
+    int wrap_w,
+    float2 crop_u,
+    float2 crop_v,
+    float2 crop_w,
+    float frame)
+{
+    return tex_lookup_float4_3d(tex, coord, wrap_u, wrap_v, wrap_w, crop_u, crop_v, crop_w, frame).x;
+}
+
+// corresponds to ::tex::texel_float4(uniform texture_3d tex, float3 coord)
+float4 tex_texel_float4_3d(uint tex, int3 coord, float frame)
+{
+    // Not used in the current materials.
+    return float4(0, 0, 0, 0);
+}
+
+float3 tex_texel_float3_3d(uint tex, int3 coord, float frame)
+{
+    return tex_texel_float4_3d(tex, coord, frame).xyz;
+}
+
+float3 tex_texel_color_3d(uint tex, int3 coord, float frame)
+{
+    return tex_texel_float3_3d(tex, coord, frame);
+}
+
+float2 tex_texel_float2_3d(uint tex, int3 coord, float frame)
+{
+    return tex_texel_float4_3d(tex, coord, frame).xy;
+}
+
+float tex_texel_float_3d(uint tex, int3 coord, float frame)
+{
+    return tex_texel_float4_3d(tex, coord, frame).x;
+}
+
+// -----------------------------------------------------------------------------
+// Bent normals
+// -----------------------------------------------------------------------------
+
+float3 mdl_adapt_normal(Shading_state_material state, float3 normal)
+{
+    // MDL will call this function with zero normals.
+    if (all(normal == float3(0.f)))
+        return normal;
+
+    const float3 V = state.renderer_state.V;
+    const float3 Ng = state.geom_normal;
+    const float3 Ns = normal;
+
+    // Algorithm from Appendix A.3 of https://arxiv.org/abs/1705.01263
+    float3 R = reflect(-V, Ns);
+    float a = dot(Ng, R);
+    if (a >= 0)
+        return Ns;
+
+    // Otherwise perturb normal
+    float b = max(0.001, dot(Ns, Ng));
+    return normalize(V + normalize(R - Ns * a / b));
+}

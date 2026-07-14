@@ -1,0 +1,4 @@
+slangpy
+numpy
+trimesh
+pillow
