@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: BSD-3-Clause
 
 public float adam_update(float primal, float grad, inout float mean, inout float variance, float learning_rate, int iteration)
 {

@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: BSD-3-Clause
 
 from app import App
 import slangpy as spy
