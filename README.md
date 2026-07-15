@@ -230,7 +230,8 @@ This repository contains course materials for SIGGRAPH 2026. For questions or is
 
 ## License
 
-This project is licensed under the Apache License 2.0. See the LICENSE file for details.
+This project is licensed under the BSD 3-Clause License. See the LICENSE file for details.
+See THIRD_PARTY_NOTICES.md for third-party asset notices.
 
 ## Acknowledgments
 
