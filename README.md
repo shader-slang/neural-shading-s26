@@ -39,19 +39,19 @@ This course covers the fundamentals of neural shading using Slang. The materials
 │   └── PavingStones070_2K.roughness.jpg
 │
 ├── network/                              # Neural network examples
-    ├── app.py                            # Main application framework
-    ├── app.slang                         # Main application shader
-    ├── step_01_basicnetwork.py           # Basic single-layer neural network
-    ├── step_01_basicnetwork.slang        # Basic network shader implementation
-    ├── step_02_multiple_layers.py        # Multi-layer network example
-    ├── step_02_multiple_layers.slang     # Multi-layer network shader
-    ├── step_03_better_activations.py     # Network with improved activations
-    ├── step_03_better_activations.slang  # Improved activations shader
-    ├── step_04_frequency_encoding.py     # Frequency encoding example
-    ├── step_04_frequency_encoding.slang  # Frequency encoding shader
-    ├── step_05_latent_texture.py         # Latent texture training example
-    ├── step_05_latent_texture.slang      # Latent texture shader
-    └── slangstars.png                    # Example texture
+│   ├── app.py                            # Main application framework
+│   ├── app.slang                         # Main application shader
+│   ├── step_01_basicnetwork.py           # Basic single-layer neural network
+│   ├── step_01_basicnetwork.slang        # Basic network shader implementation
+│   ├── step_02_multiple_layers.py        # Multi-layer network example
+│   ├── step_02_multiple_layers.slang     # Multi-layer network shader
+│   ├── step_03_better_activations.py     # Network with improved activations
+│   ├── step_03_better_activations.slang  # Improved activations shader
+│   ├── step_04_frequency_encoding.py     # Frequency encoding example
+│   ├── step_04_frequency_encoding.slang  # Frequency encoding shader
+│   ├── step_05_latent_texture.py         # Latent texture training example
+│   ├── step_05_latent_texture.slang      # Latent texture shader
+│   └── slangstars.png                    # Example texture
 │
 ├── neural/                               # Step-by-step neural material training examples
 │   └── step_01_latent_texture/ … step_08_multi_instance_training/
@@ -63,12 +63,16 @@ This course covers the fundamentals of neural shading using Slang. The materials
 
 ## Prerequisites
 
-### For Python Examples (mipmap/, network/)
+### For Python Examples
 - Python 3.10 or later
 - `slangpy` 0.43.0 - Python bindings for Slang (bundles Slang 2026.12)
 - `numpy` - Numerical computing
 - `pillow` - Image processing
+- `scipy` - Fast mesh processing path used by UTracer through `trimesh`
 - `slang` - latest Slang release from https://github.com/shader-slang/slang/releases for autodiff
+- `neural/` and UTracer neural-material examples currently use the Vulkan
+  cooperative-vector path and require Windows or Linux with an NVIDIA GPU.
+  The simpler `mipmap/` and `network/` SlangPy examples run on macOS/Metal.
 
 ### For C++ Examples (hardware-acceleration/)
 - CMake 3.20 or later
@@ -189,11 +193,15 @@ cd hardware-acceleration/build/Release  # or build/ on Linux, this is not suppor
 General Platform Support:
 - **Windows**: Vulkan
 - **Linux**: Vulkan
-- **macOS**: Metal (except hardware acceleration examples)
+- **macOS**: Metal for `mipmap/`, `network/`, autodiff, and the scalar C++ hardware sample
 
 Hardware Acceleration Examples:
 - **mlp-training**: Windows, Linux, and macOS (uses Vulkan on Windows/Linux, Metal on macOS)
 - **mlp-training-coopvec**: Windows and Linux with NVIDIA GPU only (cooperative vector not supported on macOS)
+
+Neural Material and UTracer Examples:
+- **neural/**: Windows and Linux with NVIDIA GPU only
+- **utracer/**: Windows and Linux with NVIDIA GPU only when using neural checkpoints; omit `--checkpoint` for the non-neural scene
 
 ## Troubleshooting
 

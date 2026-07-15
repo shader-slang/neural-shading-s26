@@ -5,6 +5,7 @@ set -e  # Exit on any error
 
 BUILD_DIR="build"
 CMAKE_GENERATOR="Unix Makefiles"
+BUILD_JOBS="${BUILD_JOBS:-8}"
 
 echo "Building Neural Shading Hardware Acceleration..."
 
@@ -44,7 +45,7 @@ cmake -B "$BUILD_DIR" -G "$CMAKE_GENERATOR" -DCMAKE_BUILD_TYPE=Release -DSLANG_R
 
 # Build the project
 echo "Building project..."
-cmake --build "$BUILD_DIR" --config Release --parallel
+cmake --build "$BUILD_DIR" --config Release --parallel "$BUILD_JOBS"
 
 echo "Build completed successfully!"
 echo "Executables can be found in: $BUILD_DIR/"

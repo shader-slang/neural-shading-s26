@@ -3,6 +3,7 @@ REM Build script for Neural Shading Hardware Acceleration
 
 set BUILD_DIR=build
 set CMAKE_GENERATOR="Visual Studio 17 2022"
+if not defined BUILD_JOBS set BUILD_JOBS=8
 
 REM Check if external dependencies are available
 if not exist external\slang-rhi\CMakeLists.txt (
@@ -50,7 +51,7 @@ if %ERRORLEVEL% neq 0 (
 
 REM Build the project
 echo Building project...
-cmake --build %BUILD_DIR% --config Release
+cmake --build %BUILD_DIR% --config Release --parallel %BUILD_JOBS%
 
 if %ERRORLEVEL% neq 0 (
     echo Build failed!

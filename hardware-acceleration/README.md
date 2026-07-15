@@ -44,6 +44,10 @@ Before building, fetch the required C++ dependencies:
    build.bat
    ```
 
+The build scripts use up to 8 parallel jobs by default. Set `BUILD_JOBS` to
+override this, for example `BUILD_JOBS=4 ./build.sh` or `set BUILD_JOBS=4`
+before running `build.bat`.
+
 ### Manual Setup
 
 If you prefer to set up manually:
