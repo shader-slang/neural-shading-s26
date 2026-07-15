@@ -22,9 +22,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
       - run: sudo apt-get update
       - run: sudo apt-get install -y libx11-dev
+      - run: ./setup.sh
+        working-directory: hardware-acceleration
       - run: cmake -S hardware-acceleration -B hardware-acceleration/build -DCMAKE_BUILD_TYPE=Release -DSLANG_RHI_FETCH_SLANG_VERSION=2026.12
       - run: cmake --build hardware-acceleration/build --parallel 2

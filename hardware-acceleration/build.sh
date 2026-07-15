@@ -8,31 +8,28 @@ CMAKE_GENERATOR="Unix Makefiles"
 
 echo "Building Neural Shading Hardware Acceleration..."
 
-# Check if slang-rhi submodule is initialized
+# Check if external dependencies are available
 if [ ! -f "external/slang-rhi/CMakeLists.txt" ]; then
-    echo "Error: slang-rhi submodule not found or not initialized"
-    echo "Please run setup.sh first to initialize submodules"
+    echo "Error: slang-rhi dependency not found"
+    echo "Please run setup.sh first to fetch dependencies"
     exit 1
 fi
 
-# Check if lz4 submodule is initialized
 if [ ! -f "external/lz4/build/cmake/CMakeLists.txt" ]; then
-    echo "Error: lz4 submodule not found or not initialized"
-    echo "Please run setup.sh first to initialize submodules"
+    echo "Error: lz4 dependency not found"
+    echo "Please run setup.sh first to fetch dependencies"
     exit 1
 fi
 
-# Check if miniz submodule is initialized
 if [ ! -f "external/miniz/CMakeLists.txt" ]; then
-    echo "Error: miniz submodule not found or not initialized"
-    echo "Please run setup.sh first to initialize submodules"
+    echo "Error: miniz dependency not found"
+    echo "Please run setup.sh first to fetch dependencies"
     exit 1
 fi
 
-# Check if unordered_dense submodule is initialized
 if [ ! -f "external/unordered_dense/CMakeLists.txt" ]; then
-    echo "Error: unordered_dense submodule not found or not initialized"
-    echo "Please run setup.sh first to initialize submodules"
+    echo "Error: unordered_dense dependency not found"
+    echo "Please run setup.sh first to fetch dependencies"
     exit 1
 fi
 

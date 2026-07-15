@@ -19,7 +19,7 @@ This course covers the fundamentals of neural shading using Slang. The materials
 │   ├── mlp-training/                     # Basic MLP training implementation
 │   ├── mlp-training-coopvec/             # Cooperative vector MLP training (only supported on Nvidia hardware on Windows/Linux)
 │   ├── example-base/                     # Shared base library
-│   └── external/                         # External dependencies (slang-rhi, etc.)
+│   └── external/                         # C++ dependencies fetched by setup scripts
 │
 ├── mipmap/                               # Mipmap and texture filtering examples
 │   ├── app.py                            # Main application framework
@@ -88,13 +88,7 @@ This course covers the fundamentals of neural shading using Slang. The materials
 
 ### C++ Environment Setup
 
-1. **Initialize submodules**:
-   ```bash
-   cd hardware-acceleration
-   git submodule update --init --recursive
-   ```
-
-2. **Build the hardware-acceleration project**:
+1. **Build the hardware-acceleration project**:
    ```bash
    # On Windows
    cd hardware-acceleration
@@ -107,7 +101,7 @@ This course covers the fundamentals of neural shading using Slang. The materials
    ./build.sh
    ```
 
-3. **Download Slang to test the autodiff shaders**:
+2. **Download Slang to test the autodiff shaders**:
 - Download the latest Slang release from https://github.com/shader-slang/slang/releases
 - Use the bin/slangi binary to compile and run the autodiff shader files.
 
@@ -206,7 +200,7 @@ Hardware Acceleration Examples:
 ### Common Issues
 
 1. **slangpy not found**: Ensure you have installed slangpy via pip
-2. **Build failures**: Check that all submodules are initialized
+2. **Build failures**: For C++ hardware examples, run the setup script in `hardware-acceleration/` before building
 3. **Graphics driver issues**: Update to latest graphics drivers
 4. **mlp-training-coopvec issues**: Cooperative vector is only supported on Nvidia hardware, on Windows and Linux
 5. **Network samples compile time optimization**: The network samples (in the `network/` directory) use `MaxIters` instead of `ForceUnroll` in their loop constructs to improve compile time performance. Changing these to use `ForceUnroll` could cause the samples to hang during compilation.

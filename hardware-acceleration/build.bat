@@ -4,34 +4,31 @@ REM Build script for Neural Shading Hardware Acceleration
 set BUILD_DIR=build
 set CMAKE_GENERATOR="Visual Studio 17 2022"
 
-REM Check if slang-rhi submodule is initialized
+REM Check if external dependencies are available
 if not exist external\slang-rhi\CMakeLists.txt (
-    echo Error: slang-rhi submodule not found or not initialized
-    echo Please run setup.bat first to initialize submodules
+    echo Error: slang-rhi dependency not found
+    echo Please run setup.bat first to fetch dependencies
     pause
     exit /b 1
 )
 
-REM Check if lz4 submodule is initialized
 if not exist external\lz4\build\cmake\CMakeLists.txt (
-    echo Error: lz4 submodule not found or not initialized
-    echo Please run setup.bat first to initialize submodules
+    echo Error: lz4 dependency not found
+    echo Please run setup.bat first to fetch dependencies
     pause
     exit /b 1
 )
 
-REM Check if miniz submodule is initialized
 if not exist external\miniz\CMakeLists.txt (
-    echo Error: miniz submodule not found or not initialized
-    echo Please run setup.bat first to initialize submodules
+    echo Error: miniz dependency not found
+    echo Please run setup.bat first to fetch dependencies
     pause
     exit /b 1
 )
 
-REM Check if unordered_dense submodule is initialized
 if not exist external\unordered_dense\CMakeLists.txt (
-    echo Error: unordered_dense submodule not found or not initialized
-    echo Please run setup.bat first to initialize submodules
+    echo Error: unordered_dense dependency not found
+    echo Please run setup.bat first to fetch dependencies
     pause
     exit /b 1
 )

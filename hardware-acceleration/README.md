@@ -17,17 +17,17 @@ SIGGRAPH 2026. This project includes two implementations of neural network (MLP)
 
 The build system uses the following external libraries:
 - [Slang](https://github.com/shader-slang/slang) - Shader language and compiler (automatically downloaded)
-- [slang-rhi](https://github.com/shader-slang/slang-rhi) - Render hardware interface (Git submodule)
-- [LZ4](https://github.com/lz4/lz4) - Fast compression library (Git submodule)
-- [miniz](https://github.com/richgel999/miniz) - Compression library (Git submodule)
-- [unordered_dense](https://github.com/martinus/unordered_dense) - Fast hash map/set library (Git submodule)
+- [slang-rhi](https://github.com/shader-slang/slang-rhi) - Render hardware interface
+- [LZ4](https://github.com/lz4/lz4) - Fast compression library
+- [miniz](https://github.com/richgel999/miniz) - Compression library
+- [unordered_dense](https://github.com/martinus/unordered_dense) - Fast hash map/set library
 
-### Setting up submodules
+### Setting up dependencies
 
-Before building, you need to initialize the required submodules:
+Before building, fetch the required C++ dependencies:
 
 ```bash
-git submodule update --init --recursive
+./setup.sh
 ```
 
 ## Building
@@ -48,9 +48,9 @@ git submodule update --init --recursive
 
 If you prefer to set up manually:
 
-1. **Initialize submodules**:
+1. **Fetch dependencies**:
    ```bash
-   git submodule update --init --recursive
+   ./setup.sh
    ```
 
 2. **Build with Visual Studio**:
@@ -63,8 +63,8 @@ If you prefer to set up manually:
 ### Cross-platform (Make/Ninja)
 
 ```bash
-# Setup submodules (first time only)
-git submodule update --init --recursive
+# Setup C++ dependencies (first time only)
+./setup.sh
 
 # Build
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release

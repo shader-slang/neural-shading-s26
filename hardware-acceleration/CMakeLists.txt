@@ -76,35 +76,32 @@ set(UNORDERED_DENSE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external/unordered_dense")
 # Download Slang release
 download_github_release("https://github.com/shader-slang/slang" ${SLANG_VERSION} ${SLANG_DIR})
 
-# Check if slang-rhi submodule exists and is initialized
+# Check if external dependencies are available
 if(NOT EXISTS "${SLANG_RHI_DIR}/CMakeLists.txt")
     message(FATAL_ERROR 
-        "slang-rhi submodule not found. Please initialize it with:\n"
-        "  git submodule update --init --recursive"
+        "slang-rhi dependency not found. Please fetch dependencies with:\n"
+        "  ./setup.sh"
     )
 endif()
 
-# Check if lz4 submodule exists and is initialized
 if(NOT EXISTS "${LZ4_DIR}/build/cmake/CMakeLists.txt")
     message(FATAL_ERROR 
-        "lz4 submodule not found. Please initialize it with:\n"
-        "  git submodule update --init --recursive"
+        "lz4 dependency not found. Please fetch dependencies with:\n"
+        "  ./setup.sh"
     )
 endif()
 
-# Check if miniz submodule exists and is initialized
 if(NOT EXISTS "${MINIZ_DIR}/CMakeLists.txt")
     message(FATAL_ERROR 
-        "miniz submodule not found. Please initialize it with:\n"
-        "  git submodule update --init --recursive"
+        "miniz dependency not found. Please fetch dependencies with:\n"
+        "  ./setup.sh"
     )
 endif()
 
-# Check if unordered_dense submodule exists and is initialized
 if(NOT EXISTS "${UNORDERED_DENSE_DIR}/CMakeLists.txt")
     message(FATAL_ERROR 
-        "unordered_dense submodule not found. Please initialize it with:\n"
-        "  git submodule update --init --recursive"
+        "unordered_dense dependency not found. Please fetch dependencies with:\n"
+        "  ./setup.sh"
     )
 endif()
 
@@ -120,10 +117,10 @@ set_target_properties(slang-rhi PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 
-# Add unordered_dense as subdirectory (from submodule)
+# Add unordered_dense as subdirectory
 add_subdirectory(${UNORDERED_DENSE_DIR})
 
-# Add miniz as subdirectory (from submodule)
+# Add miniz as subdirectory
 # Configure miniz to not build examples/fuzzers when included as subdirectory
 set(BUILD_EXAMPLES OFF CACHE BOOL "Build miniz examples" FORCE)
 set(BUILD_FUZZERS OFF CACHE BOOL "Build miniz fuzzers" FORCE)
@@ -145,7 +142,7 @@ find_path(SLANG_INCLUDE_DIR
     NO_DEFAULT_PATH
 )
 
-# Set slang-rhi include directory (from submodule)
+# Set slang-rhi include directory
 set(SLANG_RHI_INCLUDE_DIR "${SLANG_RHI_DIR}/include")
 
 # Try to find pre-built Slang library
@@ -181,10 +178,10 @@ list(FILTER EXAMPLE_BASE_SOURCES EXCLUDE REGEX ".*/apple/.*")
 list(FILTER EXAMPLE_BASE_SOURCES EXCLUDE REGEX ".*/linux/.*")
 list(FILTER EXAMPLE_BASE_SOURCES EXCLUDE REGEX ".*/placeholder/.*")
 
-# Filter out unordered_dense files (it's built separately as a submodule)
+# Filter out unordered_dense files (it's built separately)
 list(FILTER EXAMPLE_BASE_SOURCES EXCLUDE REGEX ".*/unordered_dense/.*")
 
-# Filter out miniz files (it's built separately as a submodule)
+# Filter out miniz files (it's built separately)
 list(FILTER EXAMPLE_BASE_SOURCES EXCLUDE REGEX ".*/miniz/.*")
 
 # Debug: print remaining source files
@@ -240,7 +237,7 @@ if(SLANG_LIBRARY)
     target_link_libraries(example-base PUBLIC ${SLANG_LIBRARY})
 endif()
 
-# Link with slang-rhi built from submodule
+# Link with slang-rhi built from source
 target_link_libraries(example-base PUBLIC slang-rhi)
 
 # Link with unordered_dense header-only library
@@ -374,7 +371,7 @@ message(STATUS "  Slang-RHI include dir: ${SLANG_RHI_INCLUDE_DIR}")
 if(SLANG_LIBRARY)
     message(STATUS "  Slang library: ${SLANG_LIBRARY}")
 endif()
-message(STATUS "  Slang-RHI: Building from submodule")
-message(STATUS "  unordered_dense: Building from submodule")
-message(STATUS "  miniz: Building from submodule")
-message(STATUS "  LZ4: Building from submodule")
+message(STATUS "  Slang-RHI: Building from external checkout")
+message(STATUS "  unordered_dense: Building from external checkout")
+message(STATUS "  miniz: Building from external checkout")
+message(STATUS "  LZ4: Building from external checkout")
