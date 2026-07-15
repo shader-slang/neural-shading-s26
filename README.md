@@ -218,7 +218,8 @@ This repository contains course materials for SIGGRAPH 2025. For questions or is
 
 ## License
 
-This project is licensed under the Apache 2.0 License - see the LICENSE file for details.
+This project is licensed under the Apache 2.0 License with LLVM exception. See `LICENSE`, `REUSE.toml`, and the license texts under `LICENSES/` for details.
+See `THIRD_PARTY_NOTICES.md` for third-party asset notices.
 
 ## Acknowledgments
 
