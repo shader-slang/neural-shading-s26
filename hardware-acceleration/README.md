@@ -1,32 +1,33 @@
 # Neural Shading Hardware Acceleration
 
 This folder contains the source code used in the "Hardware Acceleration" section of the "Introduction to Neural Shading" course at
-SIGGRAPH 2025. This project includes two implementations of neural network (MLP) training using Slang and slang-rhi.
+SIGGRAPH 2026. This project includes two implementations of neural network (MLP) training using Slang and slang-rhi.
 
-`mlp-trainining/` contains the shader and host-side C++ code to train an MLP without using any special intrinsics.
-`mlp-training-coopvec/` is a modified version of `mlp-trainining` that uses cooperative vectors to speed up inferencing and training.
+`mlp-training/` contains the shader and host-side C++ code to train an MLP without using any special intrinsics.
+`mlp-training-coopvec/` is a modified version of `mlp-training/` that uses cooperative vectors to speed up inference and training.
 
 ## Build Requirements
 
 - CMake 3.20 or later
-- C++17 compatible compiler (Visual Studio 2019+ on Windows, GCC 7+ or Clang 5+ on Linux)
+- C++20 compatible compiler
 - Internet connection for downloading external dependencies
+- On macOS, a Metal 4-capable Xcode Metal Toolchain to run `mlp-training`
 
 ## External Dependencies
 
 The build system uses the following external libraries:
 - [Slang](https://github.com/shader-slang/slang) - Shader language and compiler (automatically downloaded)
-- [slang-rhi](https://github.com/shader-slang/slang-rhi) - Render hardware interface (Git submodule)
-- [LZ4](https://github.com/lz4/lz4) - Fast compression library (Git submodule)
-- [miniz](https://github.com/richgel999/miniz) - Compression library (Git submodule)
-- [unordered_dense](https://github.com/martinus/unordered_dense) - Fast hash map/set library (Git submodule)
+- [slang-rhi](https://github.com/shader-slang/slang-rhi) - Render hardware interface
+- [LZ4](https://github.com/lz4/lz4) - Fast compression library
+- [miniz](https://github.com/richgel999/miniz) - Compression library
+- [unordered_dense](https://github.com/martinus/unordered_dense) - Fast hash map/set library
 
-### Setting up submodules
+### Setting up dependencies
 
-Before building, you need to initialize the required submodules:
+Before building, fetch the required C++ dependencies:
 
 ```bash
-git submodule update --init --recursive
+./setup.sh
 ```
 
 ## Building
@@ -43,14 +44,17 @@ git submodule update --init --recursive
    build.bat
    ```
 
+The build scripts use up to 8 parallel jobs by default. Set `BUILD_JOBS` to
+override this, for example `BUILD_JOBS=4 ./build.sh` or `set BUILD_JOBS=4`
+before running `build.bat`.
+
 ### Manual Setup
 
 If you prefer to set up manually:
 
-1. **Initialize submodules**:
+1. **Fetch dependencies**:
    ```bash
-   git submodule add https://github.com/shader-slang/slang-rhi.git external/slang-rhi
-   git submodule update --init --recursive
+   ./setup.sh
    ```
 
 2. **Build with Visual Studio**:
@@ -63,8 +67,8 @@ If you prefer to set up manually:
 ### Cross-platform (Make/Ninja)
 
 ```bash
-# Setup submodules (first time only)
-git submodule update --init --recursive
+# Setup C++ dependencies (first time only)
+./setup.sh
 
 # Build
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
@@ -114,17 +118,17 @@ If external dependencies fail to download:
 
 ### Build Issues
 - Ensure you have all required build tools installed
-- Check that your compiler supports C++17
+- Check that your compiler supports C++20
 - On Windows, make sure you have the Windows SDK installed
 
 ### Platform Compatibility and Runtime Issues
 
 Platform Support:
-- Windows and Linux: Both examples are supported, coopvec requires an NVIDIA GPU
-- macOS: Only mlp-training is supported (uses Metal), coopvec is not supported
+- Windows and Linux: Both examples are supported; `mlp-training-coopvec` requires an NVIDIA GPU.
+- macOS: `mlp-training` uses Metal. `mlp-training-coopvec` is not supported because Metal does not support the cooperative-vector operations it uses.
 
 Requirements:
-- Ensure shader files (.slang) are in the same directory as the executable
+- Keep the `resources/` directory beside the executable; it contains the per-example `.slang` modules.
 - Check that your graphics drivers support Vulkan
 - For mlp-training-coopvec:
   - NVIDIA GPU is required

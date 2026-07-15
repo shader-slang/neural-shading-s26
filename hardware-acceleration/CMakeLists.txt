@@ -65,7 +65,7 @@ function(download_github_release REPO_URL TAG_NAME TARGET_DIR)
 endfunction()
 
 # Download external dependencies
-set(SLANG_VERSION "v2026.13")  # Adjust version as needed
+set(SLANG_VERSION "v2026.12")
 
 set(SLANG_DIR "${CMAKE_BINARY_DIR}/external/slang")
 set(SLANG_RHI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external/slang-rhi")
@@ -73,50 +73,48 @@ set(LZ4_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external/lz4")
 set(MINIZ_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external/miniz")
 set(UNORDERED_DENSE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external/unordered_dense")
 
+if(WIN32)
+    set(SETUP_COMMAND "setup.bat")
+else()
+    set(SETUP_COMMAND "./setup.sh")
+endif()
+
 # Download Slang release
 download_github_release("https://github.com/shader-slang/slang" ${SLANG_VERSION} ${SLANG_DIR})
 
-# Check if slang-rhi submodule exists and is initialized
+# Check if external dependencies are available
 if(NOT EXISTS "${SLANG_RHI_DIR}/CMakeLists.txt")
     message(FATAL_ERROR 
-        "slang-rhi submodule not found. Please initialize it with:\n"
-        "  git submodule add https://github.com/shader-slang/slang-rhi.git external/slang-rhi\n"
-        "  git submodule update --init --recursive"
+        "slang-rhi dependency not found. Please fetch dependencies with:\n"
+        "  ${SETUP_COMMAND}"
     )
 endif()
 
-# Check if lz4 submodule exists and is initialized
 if(NOT EXISTS "${LZ4_DIR}/build/cmake/CMakeLists.txt")
     message(FATAL_ERROR 
-        "lz4 submodule not found. Please initialize it with:\n"
-        "  git submodule add https://github.com/lz4/lz4.git external/lz4\n"
-        "  git submodule update --init --recursive"
+        "lz4 dependency not found. Please fetch dependencies with:\n"
+        "  ${SETUP_COMMAND}"
     )
 endif()
 
-# Check if miniz submodule exists and is initialized
 if(NOT EXISTS "${MINIZ_DIR}/CMakeLists.txt")
     message(FATAL_ERROR 
-        "miniz submodule not found. Please initialize it with:\n"
-        "  git submodule add https://github.com/richgel999/miniz.git external/miniz\n"
-        "  git submodule update --init --recursive"
+        "miniz dependency not found. Please fetch dependencies with:\n"
+        "  ${SETUP_COMMAND}"
     )
 endif()
 
-# Check if unordered_dense submodule exists and is initialized
 if(NOT EXISTS "${UNORDERED_DENSE_DIR}/CMakeLists.txt")
     message(FATAL_ERROR 
-        "unordered_dense submodule not found. Please initialize it with:\n"
-        "  git submodule add https://github.com/martinus/unordered_dense.git external/unordered_dense\n"
-        "  git submodule update --init --recursive"
+        "unordered_dense dependency not found. Please fetch dependencies with:\n"
+        "  ${SETUP_COMMAND}"
     )
 endif()
 
 # Add slang-rhi as subdirectory (build from source)
 add_subdirectory(${SLANG_RHI_DIR})
 
-# The pinned slang-rhi predates Slang 2026.13 and emits compatibility warnings against its
-# expanded reflection API. Keep those warnings visible without promoting them to build errors.
+# Keep slang-rhi warnings visible without promoting them to build errors.
 set_property(TARGET slang-rhi-warnings-as-errors PROPERTY INTERFACE_COMPILE_OPTIONS "")
 
 # Set slang-rhi to use C++17 while everything else uses C++20
@@ -125,10 +123,10 @@ set_target_properties(slang-rhi PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 
-# Add unordered_dense as subdirectory (from submodule)
+# Add unordered_dense as subdirectory
 add_subdirectory(${UNORDERED_DENSE_DIR})
 
-# Add miniz as subdirectory (from submodule)
+# Add miniz as subdirectory
 # Configure miniz to not build examples/fuzzers when included as subdirectory
 set(BUILD_EXAMPLES OFF CACHE BOOL "Build miniz examples" FORCE)
 set(BUILD_FUZZERS OFF CACHE BOOL "Build miniz fuzzers" FORCE)
@@ -150,7 +148,7 @@ find_path(SLANG_INCLUDE_DIR
     NO_DEFAULT_PATH
 )
 
-# Set slang-rhi include directory (from submodule)
+# Set slang-rhi include directory
 set(SLANG_RHI_INCLUDE_DIR "${SLANG_RHI_DIR}/include")
 
 # Try to find pre-built Slang library
@@ -186,10 +184,10 @@ list(FILTER EXAMPLE_BASE_SOURCES EXCLUDE REGEX ".*/apple/.*")
 list(FILTER EXAMPLE_BASE_SOURCES EXCLUDE REGEX ".*/linux/.*")
 list(FILTER EXAMPLE_BASE_SOURCES EXCLUDE REGEX ".*/placeholder/.*")
 
-# Filter out unordered_dense files (it's built separately as a submodule)
+# Filter out unordered_dense files (it's built separately)
 list(FILTER EXAMPLE_BASE_SOURCES EXCLUDE REGEX ".*/unordered_dense/.*")
 
-# Filter out miniz files (it's built separately as a submodule)
+# Filter out miniz files (it's built separately)
 list(FILTER EXAMPLE_BASE_SOURCES EXCLUDE REGEX ".*/miniz/.*")
 
 # Debug: print remaining source files
@@ -245,7 +243,7 @@ if(SLANG_LIBRARY)
     target_link_libraries(example-base PUBLIC ${SLANG_LIBRARY})
 endif()
 
-# Link with slang-rhi built from submodule
+# Link with slang-rhi built from source
 target_link_libraries(example-base PUBLIC slang-rhi)
 
 # Link with unordered_dense header-only library
@@ -298,10 +296,17 @@ function(add_mlp_executable TARGET_NAME SOURCE_DIR)
         ${SLANG_RHI_INCLUDE_DIR}
     )
     
-    # Copy .slang files to output directory
+    # Keep each example's shader modules in a separate directory. Both examples
+    # contain modules named `network.slang` and `kernels.slang`; placing them in
+    # a shared output directory makes the later copy overwrite the earlier one.
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/resources/${SOURCE_DIR}")
     foreach(SLANG_FILE ${SLANG_FILES})
         get_filename_component(SLANG_FILENAME ${SLANG_FILE} NAME)
-        configure_file(${SLANG_FILE} ${CMAKE_BINARY_DIR}/${SLANG_FILENAME} COPYONLY)
+        configure_file(
+            ${SLANG_FILE}
+            ${CMAKE_BINARY_DIR}/resources/${SOURCE_DIR}/${SLANG_FILENAME}
+            COPYONLY
+        )
     endforeach()
     
     # Set target properties
@@ -323,8 +328,7 @@ function(add_mlp_executable TARGET_NAME SOURCE_DIR)
             SLANG_EXAMPLE_NAME=${TARGET_NAME}
         )
 
-        # Slang 2026.13 splits compiler functionality across additional runtime DLLs that are not
-        # known to the pinned slang-rhi revision. Keep the complete runtime set beside the sample.
+        # Keep the complete Slang runtime set beside the sample executable.
         file(GLOB SLANG_RUNTIME_DLLS CONFIGURE_DEPENDS
             "${SLANG_RHI_SLANG_BINARY_DIR}/bin/*.dll"
         )
@@ -356,12 +360,12 @@ install(TARGETS mlp-training mlp-training-coopvec example-base
 
 # Install shader files
 install(DIRECTORY mlp-training/ 
-    DESTINATION bin
+    DESTINATION bin/resources/mlp-training
     FILES_MATCHING PATTERN "*.slang"
 )
 
 install(DIRECTORY mlp-training-coopvec/ 
-    DESTINATION bin
+    DESTINATION bin/resources/mlp-training-coopvec
     FILES_MATCHING PATTERN "*.slang"
 )
 
@@ -373,7 +377,7 @@ message(STATUS "  Slang-RHI include dir: ${SLANG_RHI_INCLUDE_DIR}")
 if(SLANG_LIBRARY)
     message(STATUS "  Slang library: ${SLANG_LIBRARY}")
 endif()
-message(STATUS "  Slang-RHI: Building from submodule")
-message(STATUS "  unordered_dense: Building from submodule")
-message(STATUS "  miniz: Building from submodule")
-message(STATUS "  LZ4: Building from submodule")
+message(STATUS "  Slang-RHI: Building from external checkout")
+message(STATUS "  unordered_dense: Building from external checkout")
+message(STATUS "  miniz: Building from external checkout")
+message(STATUS "  LZ4: Building from external checkout")

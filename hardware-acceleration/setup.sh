@@ -1,6 +1,6 @@
 #!/bin/bash
 # Setup script for Neural Shading Hardware Acceleration
-# This script initializes the required Git submodules
+# This script fetches the dependencies required by the C++ hardware examples.
 
 set -e  # Exit on any error
 
@@ -13,38 +13,31 @@ if ! git status &>/dev/null; then
     exit 1
 fi
 
-# Check if external directory exists
-if [ ! -d "external" ]; then
-    mkdir external
-fi
+fetch_dep() {
+    local name="$1"
+    local url="$2"
+    local rev="$3"
+    local path="external/$name"
 
-# Add slang-rhi submodule if it doesn't exist
-if [ ! -d "external/slang-rhi" ]; then
-    echo "Adding slang-rhi submodule..."
-    git submodule add https://github.com/shader-slang/slang-rhi.git external/slang-rhi
-fi
+    if [ ! -e "$path" ]; then
+        echo "Cloning $name..."
+        git clone "$url" "$path"
+    elif ! git -C "$path" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        echo "Error: $path exists but is not a Git checkout"
+        exit 1
+    fi
 
-# Add lz4 submodule if it doesn't exist
-if [ ! -d "external/lz4" ]; then
-    echo "Adding lz4 submodule..."
-    git submodule add https://github.com/lz4/lz4.git external/lz4
-fi
+    echo "Checking out $name..."
+    git -C "$path" fetch origin
+    git -C "$path" checkout "$rev"
+}
 
-# Add miniz submodule if it doesn't exist
-if [ ! -d "external/miniz" ]; then
-    echo "Adding miniz submodule..."
-    git submodule add https://github.com/richgel999/miniz.git external/miniz
-fi
+mkdir -p external
 
-# Add unordered_dense submodule if it doesn't exist
-if [ ! -d "external/unordered_dense" ]; then
-    echo "Adding unordered_dense submodule..."
-    git submodule add https://github.com/martinus/unordered_dense.git external/unordered_dense
-fi
-
-# Initialize and update all submodules
-echo "Initializing and updating submodules..."
-git submodule update --init --recursive
+fetch_dep slang-rhi https://github.com/shader-slang/slang-rhi.git 0a7d257546ecb7b874367544b2e06b776dc714a8
+fetch_dep lz4 https://github.com/lz4/lz4.git 0774d05537f9762f838f7ab541b7765f1a729cb5
+fetch_dep miniz https://github.com/richgel999/miniz.git 77d0dce8627735138c51770d1799a1ef48f2117d
+fetch_dep unordered_dense https://github.com/martinus/unordered_dense.git e5b9441ecf193f3e1e8f954527fc76edee20d7eb
 
 echo "Setup completed successfully!"
 echo "You can now run build.sh to build the project."
