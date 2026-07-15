@@ -17,26 +17,26 @@ struct NetworkParameters<int Inputs, int Outputs>
     [Differentiable]
     float get_bias(int neuron)
     {
-        return biases.get({neuron});
+        return biases.load(neuron);
     }
     [Differentiable]
     float get_weight(int neuron, int input)
     {
-        return weights.get({neuron, input});
+        return weights.load(neuron, input);
     }
 
     [BackwardDerivativeOf(get_bias)]
     void get_bias_bwd(int neuron, float grad)
     {
-        // .set on an atomic tensor atomically adds the result
-        biases_grad.set({neuron}, grad);
+        // .add on an atomic tensor atomically adds the result
+        biases_grad.add(neuron, grad);
     }
 
     [BackwardDerivativeOf(get_weight)]
     void get_weight_bwd(int neuron, int input, float grad)
     {
-        // .set on an atomic tensor atomically adds the result
-        weights_grad.set({neuron, input}, grad);
+        // .add on an atomic tensor atomically adds the result
+        weights_grad.add(neuron, input, grad);
     }
 
     // Evaluate all neurons in the layer
@@ -203,7 +203,7 @@ void calculate_grads(uint seed, int2 batch_index, int2 batch_size, Tensor<float3
     int2 resolution = {reference.shape[1], reference.shape[0]};
     int2 pixel = int2(uv * float2(resolution));
     // Evaluate the reference texture color there
-    float3 reference_color = reference.getv(pixel);
+    float3 reference_color = reference.load(pixel);
     // Backpropagate through the loss
     bwd_diff(loss)(pixel, resolution, reference_color, network, 1.0f);
 }

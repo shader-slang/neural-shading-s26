@@ -5,15 +5,15 @@
 float square(float x, float y)
 {
     let x2 = x * x;
-    let y2 = debugGrad("y2", y * y);
+    let y2 = debugGrad(y * y);
     return x2 + y2;
 }
 
-float debugGrad(NativeString s, float x) { return x; }
+float debugGrad(float x) { return x; }
 [BackwardDerivativeOf(debugGrad)]
-void debugGradBwd(NativeString s, inout DifferentialPair<float> x, float dOut)
+void debugGradBwd(inout DifferentialPair<float> x, float dOut)
 {
-    printf("Gradient of %s is %f\n", s, dOut);
+    printf("Gradient of y2 is %f\n", dOut);
     x = diffPair(x.p, dOut);
 }
 

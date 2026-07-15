@@ -16,36 +16,36 @@ struct MaterialParameters
     [Differentiable]
     float3 get_albedo(int2 pixel)
     {
-        return albedo.getv(pixel);
+        return albedo.load(pixel);
     }
 
     [BackwardDerivativeOf(get_albedo)]
     void get_albedo_bwd(int2 pixel, float3 grad)
     {
-        albedo_grad.setv(pixel, grad);
+        albedo_grad.store(pixel, grad);
     }
 
     [Differentiable]
     float3 get_normal(int2 pixel)
     {
-        return normal.getv(pixel);
+        return normal.load(pixel);
     }
 
     [BackwardDerivativeOf(get_normal)]
     void get_normal_bwd(int2 pixel, float3 grad)
     {
-        normal_grad.setv(pixel, grad);
+        normal_grad.store(pixel, grad);
     }
 
     [Differentiable]
     float get_roughness(int2 pixel)
     {
-        return roughness.getv(pixel);
+        return roughness.load(pixel);
     }
     [BackwardDerivativeOf(get_roughness)]
     void get_roughness_bwd(int2 pixel, float grad)
     {
-        roughness_grad.setv(pixel, grad);
+        roughness_grad.store(pixel, grad);
     }
 };
 
@@ -204,19 +204,19 @@ void optimizer_step3(inout float3 primal, float3 grad, inout float3 mean, inout 
 float downsample1(int2 pixel, Tensor<float, 2> source)
 {
     float res = 0;
-    res += source.getv(pixel * 2 + int2(0, 0));
-    res += source.getv(pixel * 2 + int2(1, 0));
-    res += source.getv(pixel * 2 + int2(0, 1));
-    res += source.getv(pixel * 2 + int2(1, 1));
+    res += source.load(pixel * 2 + int2(0, 0));
+    res += source.load(pixel * 2 + int2(1, 0));
+    res += source.load(pixel * 2 + int2(0, 1));
+    res += source.load(pixel * 2 + int2(1, 1));
     return res * 0.25;
 }
 
 float3 downsample3(int2 pixel, Tensor<float3, 2> source)
 {
     float3 res = 0;
-    res += source.getv(pixel * 2 + int2(0, 0));
-    res += source.getv(pixel * 2 + int2(1, 0));
-    res += source.getv(pixel * 2 + int2(0, 1));
-    res += source.getv(pixel * 2 + int2(1, 1));
+    res += source.load(pixel * 2 + int2(0, 0));
+    res += source.load(pixel * 2 + int2(1, 0));
+    res += source.load(pixel * 2 + int2(0, 1));
+    res += source.load(pixel * 2 + int2(1, 1));
     return res * 0.25;
 }

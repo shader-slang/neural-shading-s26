@@ -13,7 +13,7 @@ import utracer
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run UTracer.")
-    parser.add_argument("--checkpoint", type=Path, default=r"C:\sw\neural-shading-s26\train\runs\20260506_120046\0098304", help="Baked neural checkpoint directory or .npz file.")
+    parser.add_argument("--checkpoint", type=Path, default=None, help="Optional baked neural checkpoint directory or .npz file.")
     parser.add_argument("--width", type=int, default=1920)
     parser.add_argument("--height", type=int, default=1080)
     args = parser.parse_args()
