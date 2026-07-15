@@ -1,6 +1,6 @@
-# Neural Shading SIGGRAPH 2025
+# Neural Shading SIGGRAPH 2026
 
-Materials for the Neural Shading Course at SIGGRAPH 2025. This repository contains practical examples and implementations of neural shading techniques using Slang.
+Materials for the Neural Shading Course at SIGGRAPH 2026. This repository contains practical examples and implementations of neural shading techniques using Slang.
 
 ## Overview
 
@@ -19,7 +19,7 @@ This course covers the fundamentals of neural shading using Slang. The materials
 │   ├── mlp-training/                     # Basic MLP training implementation
 │   ├── mlp-training-coopvec/             # Cooperative vector MLP training (only supported on Nvidia hardware on Windows/Linux)
 │   ├── example-base/                     # Shared base library
-│   └── external/                         # External dependencies (slang-rhi, etc.)
+│   └── external/                         # C++ dependencies fetched by setup scripts
 │
 ├── mipmap/                               # Mipmap and texture filtering examples
 │   ├── app.py                            # Main application framework
@@ -38,60 +38,61 @@ This course covers the fundamentals of neural shading using Slang. The materials
 │   ├── PavingStones070_2K.normal.jpg
 │   └── PavingStones070_2K.roughness.jpg
 │
-└── network/                              # Neural network examples
-    ├── app.py                            # Main application framework
-    ├── app.slang                         # Main application shader
-    ├── step_01_basicnetwork.py           # Basic single-layer neural network
-    ├── step_01_basicnetwork.slang        # Basic network shader implementation
-    ├── step_02_multiple_layers.py        # Multi-layer network example
-    ├── step_02_multiple_layers.slang     # Multi-layer network shader
-    ├── step_03_better_activations.py     # Network with improved activations
-    ├── step_03_better_activations.slang  # Improved activations shader
-    ├── step_04_frequency_encoding.py     # Frequency encoding example
-    ├── step_04_frequency_encoding.slang  # Frequency encoding shader
-    ├── step_05_latent_texture.py         # Latent texture training example
-    ├── step_05_latent_texture.slang      # Latent texture shader
-    └── slangstars.png                    # Example texture
+├── network/                              # Neural network examples
+│   ├── app.py                            # Main application framework
+│   ├── app.slang                         # Main application shader
+│   ├── step_01_basicnetwork.py           # Basic single-layer neural network
+│   ├── step_01_basicnetwork.slang        # Basic network shader implementation
+│   ├── step_02_multiple_layers.py        # Multi-layer network example
+│   ├── step_02_multiple_layers.slang     # Multi-layer network shader
+│   ├── step_03_better_activations.py     # Network with improved activations
+│   ├── step_03_better_activations.slang  # Improved activations shader
+│   ├── step_04_frequency_encoding.py     # Frequency encoding example
+│   ├── step_04_frequency_encoding.slang  # Frequency encoding shader
+│   ├── step_05_latent_texture.py         # Latent texture training example
+│   ├── step_05_latent_texture.slang      # Latent texture shader
+│   └── slangstars.png                    # Example texture
+│
+├── neural/                               # Step-by-step neural material training examples
+│   └── step_01_latent_texture/ … step_08_multi_instance_training/
+│
+├── materials/                            # Ceramic and velvet MDL target materials
+├── utracer/                              # Minimal SlangPy path tracer and neural-material viewer
+└── data/                                 # Viewer scene and environment assets
 ```
 
 ## Prerequisites
 
-### For Python Examples (mipmap/, network/)
-- Python 3.7 or later
-- `slangpy` - Python bindings for Slang
+### For Python Examples
+- Python 3.10 or later
+- `slangpy` 0.43.0 - Python bindings for Slang (bundles Slang 2026.12)
 - `numpy` - Numerical computing
 - `pillow` - Image processing
+- `scipy` - Fast mesh processing path used by UTracer through `trimesh`
 - `slang` - latest Slang release from https://github.com/shader-slang/slang/releases for autodiff
+- `neural/` and UTracer neural-material examples currently use the Vulkan
+  cooperative-vector path and require Windows or Linux with an NVIDIA GPU.
+  The simpler `mipmap/` and `network/` SlangPy examples run on macOS/Metal.
 
 ### For C++ Examples (hardware-acceleration/)
 - CMake 3.20 or later
-- C++17 compatible compiler
+- C++20 compatible compiler
 - Graphics driver supporting Vulkan (or Metal on macOS, note that cooperative vector is not supported on Metal)
+- On macOS, a Metal 4-capable Xcode Metal Toolchain for the scalar `mlp-training` sample
 - Git
 
 ## Installation
 
 ### Python Environment Setup
 
-1. **Install slangpy**:
+1. **Install the Python dependencies**:
    ```bash
-   pip install slangpy
-   ```
-
-2. **Install additional dependencies**:
-   ```bash
-   pip install numpy pillow
+   python -m pip install -r requirements.txt
    ```
 
 ### C++ Environment Setup
 
-1. **Initialize submodules**:
-   ```bash
-   cd hardware-acceleration
-   git submodule update --init --recursive
-   ```
-
-2. **Build the hardware-acceleration project**:
+1. **Build the hardware-acceleration project**:
    ```bash
    # On Windows
    cd hardware-acceleration
@@ -104,7 +105,7 @@ This course covers the fundamentals of neural shading using Slang. The materials
    ./build.sh
    ```
 
-3. **Download Slang to test the autodiff shaders**:
+2. **Download Slang to test the autodiff shaders**:
 - Download the latest Slang release from https://github.com/shader-slang/slang/releases
 - Use the bin/slangi binary to compile and run the autodiff shader files.
 
@@ -112,39 +113,54 @@ This course covers the fundamentals of neural shading using Slang. The materials
 
 ### Running Python Examples
 
-**Basic Mipmap Example** (neural-shading-s25/mipmap):
+**Basic Mipmap Example** (neural-shading-s26/mipmap):
 ```bash
 cd mipmap
 python step_01_basicprogram.py
 ```
 
-**Neural Network Training** (neural-shading-s25/mipmap):
+**Neural Network Training** (neural-shading-s26/mipmap):
 ```bash
 cd mipmap
 python step_05_train.py
 ```
 
-**Basic Network Example** (neural-shading-s25/network):
+**Basic Network Example** (neural-shading-s26/network):
 ```bash
 cd network
 python step_01_basicnetwork.py
 ```
 
+**Neural Material Training** (neural-shading-s26/neural):
+```bash
+python neural/step_01_latent_texture/run.py
+```
+
+The `neural/` directory contains eight progressive examples; each step has its
+own README with the run command and a description of what it adds.
+
+**UTracer Viewer** (optional):
+```bash
+python utracer/main.py --checkpoint path/to/checkpoint
+```
+
+Omit `--checkpoint` to run the non-neural scene.
+
 ### Running C++ Examples
 
-**Autodiff Examples** (neural-shading-s25/autodiff):
+**Autodiff Examples** (neural-shading-s26/autodiff):
 ```bash
 cd autodiff
 ./slangi square.slang
 ```
 
-**Basic MLP Training** (neural-shading-s25/hardware-acceleration):
+**Basic MLP Training** (neural-shading-s26/hardware-acceleration):
 ```bash
 cd hardware-acceleration/build/Release  # or build/ on Linux/macOS
 ./mlp-training
 ```
 
-**Cooperative Vector MLP Training** (neural-shading-s25/hardware-acceleration):
+**Cooperative Vector MLP Training** (neural-shading-s26/hardware-acceleration):
 ```bash
 cd hardware-acceleration/build/Release  # or build/ on Linux, this is not supported on macOS
 ./mlp-training-coopvec
@@ -160,7 +176,7 @@ cd hardware-acceleration/build/Release  # or build/ on Linux, this is not suppor
 ### Hardware Acceleration
 - GPU-accelerated neural network training
 - Cooperative vector intrinsics for improved performance (only on Nvidia hardware on Windows and Linux)
-- Cross-platform support (Vulkan, Metal)
+- The scalar `mlp-training` sample supports Vulkan (Windows/Linux) and Metal (macOS)
 
 ### Neural Shading
 - Real-time neural network inference in shaders
@@ -177,18 +193,22 @@ cd hardware-acceleration/build/Release  # or build/ on Linux, this is not suppor
 General Platform Support:
 - **Windows**: Vulkan
 - **Linux**: Vulkan
-- **macOS**: Metal (except hardware acceleration examples)
+- **macOS**: Metal for `mipmap/`, `network/`, autodiff, and the scalar C++ hardware sample
 
 Hardware Acceleration Examples:
 - **mlp-training**: Windows, Linux, and macOS (uses Vulkan on Windows/Linux, Metal on macOS)
 - **mlp-training-coopvec**: Windows and Linux with NVIDIA GPU only (cooperative vector not supported on macOS)
+
+Neural Material and UTracer Examples:
+- **neural/**: Windows and Linux with NVIDIA GPU only
+- **utracer/**: Windows and Linux with NVIDIA GPU only; omit `--checkpoint` for the non-neural scene
 
 ## Troubleshooting
 
 ### Common Issues
 
 1. **slangpy not found**: Ensure you have installed slangpy via pip
-2. **Build failures**: Check that all submodules are initialized
+2. **Build failures**: For C++ hardware examples, run the setup script in `hardware-acceleration/` before building
 3. **Graphics driver issues**: Update to latest graphics drivers
 4. **mlp-training-coopvec issues**: Cooperative vector is only supported on Nvidia hardware, on Windows and Linux
 5. **Network samples compile time optimization**: The network samples (in the `network/` directory) use `MaxIters` instead of `ForceUnroll` in their loop constructs to improve compile time performance. Changing these to use `ForceUnroll` could cause the samples to hang during compilation.
@@ -209,12 +229,12 @@ https://github.com/NVIDIA-RTX/RTXNS
 
 ### RTXNTC
 
-Related to the neural shaing samples is the RTX Neural Texture Compression (NTC) SDK which allows compressing all
+Related to the neural shading samples is the RTX Neural Texture Compression (NTC) SDK which allows compressing all
 PBR textures for a single material together: https://github.com/NVIDIA-RTX/RTXNTC
 
 ## Contributing
 
-This repository contains course materials for SIGGRAPH 2025. For questions or issues related to the course content, please refer to the course documentation or contact the instructors.
+This repository contains course materials for SIGGRAPH 2026. For questions or issues related to the course content, please refer to the course documentation or contact the instructors.
 
 ## License
 
@@ -225,4 +245,4 @@ See `THIRD_PARTY_NOTICES.md` for third-party asset notices.
 
 - Slang team for the shader language and compiler
 - slang-rhi and slangpy team and contributors
-- SIGGRAPH 2025 Neural Shading Course instructors and contributors
+- SIGGRAPH 2026 Neural Shading Course instructors and contributors
