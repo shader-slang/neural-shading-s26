@@ -7,7 +7,8 @@ additional provenance notes.
 
 - Files: `materials/ceramic/*` and `materials/velvet/*`.
 - Source: NVIDIA MDL-derived material exports and supporting runtime code.
-- License: NVIDIA BSD-style MDL example material license.
+- License: NVIDIA BSD-style MDL example material license. See
+  `LICENSES/LicenseRef-NVIDIA-BSD-3-Clause.txt`.
 
 ## SIGGRAPH 2025 course material carry-forward
 
@@ -23,10 +24,10 @@ additional provenance notes.
 - Source: Brown Photostudio 02 HDRI from Poly Haven.
 - Author: Sergej Majboroda.
 - URL: https://polyhaven.com/a/brown_photostudio_02
-- License: CC0 1.0 Universal.
+- License: CC0 1.0 Universal. See `LICENSES/CC0-1.0.txt`.
 
 ## Shader Ball
 
 - File: `data/shaderball.glb`
 - Source: Rebuilt from the open-source Blender shader ball.
-- License: CC0 1.0 Universal.
+- License: CC0 1.0 Universal. See `LICENSES/CC0-1.0.txt`.
