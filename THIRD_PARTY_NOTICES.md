@@ -9,6 +9,14 @@ additional provenance notes.
 - Source: NVIDIA MDL-derived material exports and supporting runtime code.
 - License: Covered by this repository's NVIDIA BSD-style license. See `LICENSE`.
 
+## SIGGRAPH 2025 course material carry-forward
+
+- Files: `mipmap/PavingStones070_2K.*`, `network/slangstars.png`, and
+  `hardware-acceleration/example-base/*`.
+- Source: Carried forward from the SIGGRAPH 2025 Neural Shading course
+  materials.
+- License: Covered by this repository's NVIDIA BSD-style license. See `LICENSE`.
+
 ## Brown Photostudio 02
 
 - File: `data/brown_photostudio_02_2k.hdr`
