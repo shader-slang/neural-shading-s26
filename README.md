@@ -201,7 +201,7 @@ Hardware Acceleration Examples:
 
 Neural Material and UTracer Examples:
 - **neural/**: Windows and Linux with NVIDIA GPU only
-- **utracer/**: Windows and Linux with NVIDIA GPU only when using neural checkpoints; omit `--checkpoint` for the non-neural scene
+- **utracer/**: Windows and Linux with NVIDIA GPU only; omit `--checkpoint` for the non-neural scene
 
 ## Troubleshooting
 
