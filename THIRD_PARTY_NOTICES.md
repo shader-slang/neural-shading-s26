@@ -7,7 +7,7 @@ additional provenance notes.
 
 - Files: `materials/ceramic/*` and `materials/velvet/*`.
 - Source: NVIDIA MDL-derived material exports and supporting runtime code.
-- License: Covered by this repository's NVIDIA BSD-style license. See `LICENSE`.
+- License: NVIDIA BSD-style MDL example material license.
 
 ## SIGGRAPH 2025 course material carry-forward
 
@@ -15,7 +15,7 @@ additional provenance notes.
   `hardware-acceleration/example-base/*`.
 - Source: Carried forward from the SIGGRAPH 2025 Neural Shading course
   materials.
-- License: Covered by this repository's NVIDIA BSD-style license. See `LICENSE`.
+- License: Covered by this repository's Apache 2.0 license. See `LICENSE`.
 
 ## Brown Photostudio 02
 
