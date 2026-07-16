@@ -6,7 +6,7 @@
 import slangpy;
 
 #ifndef USE_COOPVEC_LINEAR
-#define USE_COOPVEC_LINEAR 1
+#define USE_COOPVEC_LINEAR 0
 #endif
 #include "neural/common/linear_layer.slang"
 
@@ -75,7 +75,10 @@ public struct NeuralLatentTexture
         int2 c1 = min(c0 + 1, size - 1);
         float2 f = saturate(uv - float2(c0));
 
-        float[kNeuralNumLatents] result;
+        float[kNeuralNumLatents] result = {
+            0.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 0.0f
+        };
         [ForceUnroll]
         for (int i = 0; i < kNeuralNumLatents; ++i)
         {

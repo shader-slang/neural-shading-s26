@@ -121,36 +121,16 @@ public struct LinearLayer<int Inputs, int Outputs>
     Tensor<half, 1> biases;
     Tensor<half, 2> weights;
 
-    AtomicTensor<half, 1> biases_grad;
-    AtomicTensor<half, 2> weights_grad;
-
-    [Differentiable]
     float get_bias(int neuron)
     {
-        return biases.load(neuron);
+        return float(biases[neuron]);
     }
 
-    [Differentiable]
     float get_weight(int neuron, int input)
     {
-        return weights.load(neuron, input);
+        return float(weights[neuron, input]);
     }
 
-    [BackwardDerivativeOf(get_bias)]
-    void get_bias_bwd(int neuron, float grad)
-    {
-        if (!isnan(grad))
-            biases_grad.add(neuron, grad);
-    }
-
-    [BackwardDerivativeOf(get_weight)]
-    void get_weight_bwd(int neuron, int input, float grad)
-    {
-        if (!isnan(grad))
-            weights_grad.add(neuron, input, grad);
-    }
-
-    [Differentiable]
     float[Outputs] forward(float[Inputs] x)
     {
         float[Outputs] y;
