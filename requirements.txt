@@ -1,4 +1,4 @@
-slangpy==0.43.0
+slangpy==0.43.1
 numpy
 trimesh
 pillow
