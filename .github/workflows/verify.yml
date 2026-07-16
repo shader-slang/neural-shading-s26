@@ -1,0 +1,30 @@
+name: Verify course materials
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  python:
+    name: Python examples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m compileall -q mipmap network neural utracer materials
+
+  hardware-configuration:
+    name: Hardware example configuration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update
+      - run: sudo apt-get install -y libx11-dev
+      - run: ./setup.sh
+        working-directory: hardware-acceleration
+      - run: cmake -S hardware-acceleration -B hardware-acceleration/build -DCMAKE_BUILD_TYPE=Release -DSLANG_RHI_FETCH_SLANG_VERSION=2026.12
+      - run: cmake --build hardware-acceleration/build --parallel 2
