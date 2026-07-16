@@ -121,16 +121,20 @@ public struct LinearLayer<int Inputs, int Outputs>
     Tensor<half, 1> biases;
     Tensor<half, 2> weights;
 
-    float get_bias(int neuron)
+    AtomicTensor<float, 1> biases_grad;
+    AtomicTensor<float, 2> weights_grad;
+
+    float get_bias(no_diff int neuron)
     {
-        return float(biases[neuron]);
+        return biases.load(neuron);
     }
 
-    float get_weight(int neuron, int input)
+    float get_weight(no_diff int neuron, no_diff int input_index)
     {
-        return float(weights[neuron, input]);
+        return weights.load(neuron, input_index);
     }
 
+    [Differentiable]
     float[Outputs] forward(float[Inputs] x)
     {
         float[Outputs] y;
@@ -146,6 +150,35 @@ public struct LinearLayer<int Inputs, int Outputs>
         }
 
         return y;
+    }
+
+    [BackwardDerivativeOf(forward)]
+    void forward_bwd(
+        inout DifferentialPair<float[Inputs]> x,
+        float[Outputs] output_grad)
+    {
+        float input_grad[Inputs];
+        [ForceUnroll]
+        for (int col = 0; col < Inputs; ++col)
+            input_grad[col] = 0.0f;
+
+        [MaxIters(Outputs)]
+        for (int row = 0; row < Outputs; ++row)
+        {
+            float grad = output_grad[row];
+            if (isnan(grad))
+                continue;
+
+            biases_grad.add(row, grad);
+            [ForceUnroll]
+            for (int col = 0; col < Inputs; ++col)
+            {
+                weights_grad.add(row, col, grad * x.p[col]);
+                input_grad[col] += grad * get_weight(row, col);
+            }
+        }
+
+        x = diffPair(x.p, input_grad);
     }
 };
 

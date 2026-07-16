@@ -155,7 +155,7 @@ class LinearLayer(spy.InstanceList):
                 iteration,
             )
         else:
-            self.module.optimizer_step(
+            self.module.optimizer_step_half_float(
                 self.biases,
                 self.biases_grad,
                 self.m_biases,
@@ -163,7 +163,7 @@ class LinearLayer(spy.InstanceList):
                 learning_rate,
                 iteration,
             )
-            self.module.optimizer_step(
+            self.module.optimizer_step_half_float(
                 self.weights,
                 self.weights_grad,
                 self.m_weights,
@@ -186,8 +186,12 @@ class LinearLayer(spy.InstanceList):
             self.v_weights = spy.Tensor.from_numpy(self.device, np.zeros(self.weight_count, dtype=np.float32))
             self._bind_coopvec_buffers()
         else:
-            self.biases_grad = spy.Tensor.zeros_like(self.biases)
-            self.weights_grad = spy.Tensor.zeros_like(self.weights)
+            self.biases_grad = spy.Tensor.zeros(
+                self.device, self.biases.shape, dtype="float"
+            )
+            self.weights_grad = spy.Tensor.zeros(
+                self.device, self.weights.shape, dtype="float"
+            )
             self.m_biases = spy.Tensor.from_numpy(self.device, np.zeros(self.outputs, dtype=np.float32))
             self.m_weights = spy.Tensor.from_numpy(
                 self.device, np.zeros((self.outputs, self.inputs), dtype=np.float32)
