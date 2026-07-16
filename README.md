@@ -64,8 +64,8 @@ This course covers the fundamentals of neural shading using Slang. The materials
 ## Prerequisites
 
 ### For Python Examples
-- Python 3.10 or later
-- `slangpy` 0.43.0 - Python bindings for Slang (bundles Slang 2026.12)
+- Python 3.9 or later
+- `slangpy` 0.43.1 - Python bindings for Slang (bundles Slang 2026.12)
 - `numpy` - Numerical computing
 - `pillow` - Image processing
 - `scipy` - Fast mesh processing path used by UTracer through `trimesh`
