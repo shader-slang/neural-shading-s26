@@ -51,6 +51,7 @@ import slangpy.reflection as spyref
 
 from materials.ceramic.mdl_ceramic_material import CeramicMaterial
 from materials.velvet.mdl_velvet_material import VelvetMaterial
+from neural.common.linear_layer import preferred_device_type, validate_device
 from .neural_checkpoint import BakedNeuralMaterial, load_baked_neural_material
 
 NON_NEURAL_MATERIAL = 0
@@ -59,11 +60,25 @@ NEURAL_BAKED_MATERIAL = 3
 
 def create_device(device_type: Optional[spy.DeviceType] = None) -> spy.Device:
     """Create a SlangPy device configured for utracer."""
-    if device_type is None:
-        device_type = spy.DeviceType.automatic
-    return spy.create_device(
+    if device_type is None or device_type == spy.DeviceType.automatic:
+        device_type = (
+            spy.DeviceType.metal
+            if sys.platform == "darwin"
+            else preferred_device_type()
+        )
+    use_coopvec = device_type != spy.DeviceType.metal
+    return spy.Device(
         type=device_type,
-        include_paths=[Path(__file__).parent, Path(__file__).parent.parent],
+        compiler_options={
+            "include_paths": [
+                spy.SHADER_PATH,
+                Path(__file__).parent,
+                Path(__file__).parent.parent,
+            ],
+            "defines": {
+                "USE_COOPVEC_LINEAR": "1" if use_coopvec else "0",
+            },
+        },
     )
 
 class Camera:
@@ -178,6 +193,8 @@ spybind.PYTHON_TYPES[Camera] = lambda layout, value: CameraMarshall(layout)
 
 class MicroScene:
     def __init__(self, device: spy.Device):
+        if device.info.type != spy.DeviceType.metal:
+            validate_device(device)
         self.device = device
         self.module = Module(device.load_module("utracer"))
         self.sample = 0

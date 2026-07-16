@@ -6,7 +6,7 @@
 import slangpy;
 
 #ifndef USE_COOPVEC_LINEAR
-#define USE_COOPVEC_LINEAR 0
+#define USE_COOPVEC_LINEAR 1
 #endif
 #include "neural/common/linear_layer.slang"
 

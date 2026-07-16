@@ -201,7 +201,8 @@ Hardware Acceleration Examples:
 
 Neural Material and UTracer Examples:
 - **neural/**: Windows and Linux with NVIDIA GPU only
-- **utracer/**: Windows, Linux, and macOS. UTracer uses the scalar neural-decoder path on Metal.
+- **utracer/**: Windows, Linux, and macOS. UTracer uses cooperative vectors on
+  Vulkan and the scalar neural-decoder path on Metal.
 
 ## Troubleshooting
 

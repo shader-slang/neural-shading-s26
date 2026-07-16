@@ -19,9 +19,16 @@ DECODER_HIDDEN = 32
 class NeuralDecoder(spy.InstanceList):
     def __init__(self, device: spy.Device, module: spy.Module):
         super().__init__(module["NeuralDecoder"])
-        self.layer0 = LinearLayer(device, module, NUM_LATENTS + 6, DECODER_HIDDEN, use_coopvec=False)
-        self.layer1 = LinearLayer(device, module, DECODER_HIDDEN, DECODER_HIDDEN, use_coopvec=False)
-        self.layer2 = LinearLayer(device, module, DECODER_HIDDEN, 3, use_coopvec=False)
+        use_coopvec = device.info.type != spy.DeviceType.metal
+        self.layer0 = LinearLayer(
+            device, module, NUM_LATENTS + 6, DECODER_HIDDEN, use_coopvec=use_coopvec
+        )
+        self.layer1 = LinearLayer(
+            device, module, DECODER_HIDDEN, DECODER_HIDDEN, use_coopvec=use_coopvec
+        )
+        self.layer2 = LinearLayer(
+            device, module, DECODER_HIDDEN, 3, use_coopvec=use_coopvec
+        )
 
     def load(self, data: Mapping[str, np.ndarray], prefixes: list[str]) -> None:
         self.layer0.load(data, prefixes[0])
