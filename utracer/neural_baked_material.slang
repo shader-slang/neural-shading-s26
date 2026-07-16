@@ -8,7 +8,7 @@ import slangpy;
 #ifndef USE_COOPVEC_LINEAR
 #define USE_COOPVEC_LINEAR 1
 #endif
-#include "train/linear_layer.slang"
+#include "neural/common/linear_layer.slang"
 
 static const int kNeuralNumLatents = 8;
 static const int kNeuralDecoderHidden = 32;

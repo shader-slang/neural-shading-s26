@@ -93,12 +93,27 @@ struct ExampleProgram : public TestBase
     {
         parseOption(argc, argv);
 
-        rhi::DeviceDesc deviceDesc;
+        rhi::DeviceDesc deviceDesc = {};
         // Auto-detect platform and choose appropriate backend
 #ifdef __APPLE__
         // Use Metal on macOS
-        deviceDesc.slang.targetProfile = "metal_2_4";
         deviceDesc.deviceType = rhi::DeviceType::Metal;
+        // Slang 2026.12 emits the Metal 4 required-threadgroup attribute.
+        // Forward the matching language standard to the Metal compiler.
+        static const slang::CompilerOptionEntry compilerOptions[] = {
+            {
+                slang::CompilerOptionName::DownstreamArgs,
+                {
+                    slang::CompilerOptionValueKind::String,
+                    0,
+                    0,
+                    "metal",
+                    "-std=metal4.0",
+                },
+            },
+        };
+        deviceDesc.slang.compilerOptionEntries = compilerOptions;
+        deviceDesc.slang.compilerOptionEntryCount = 1;
         // Add preprocessor macro for Apple devices
         static const slang::PreprocessorMacroDesc defines[] = {
             {"__SLANG_APPLE__", "1"},
@@ -113,6 +128,7 @@ struct ExampleProgram : public TestBase
 #endif
         deviceDesc.slang.preprocessorMacros = defines;
         deviceDesc.slang.preprocessorMacroCount = 1;
+        deviceDesc.debugCallback = getExampleDebugCallback();
 
         gDevice = rhi::getRHI()->createDevice(deviceDesc);
         if (!gDevice)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import math
 import sys
 from pathlib import Path
@@ -43,7 +44,13 @@ CHECKPOINT_INTERVAL = 16 * 1024
 CHECKPOINT_PREVIEW_FRAMES = 128
 RANDOM_SEED = 1
 CHECKPOINT_TO_LOAD = None
-CHECKPOINT_TO_LOAD = r"neural\step_01_latent_texture\runs\20260519_150726\checkpoints\0081920"
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Train the step-01 latent texture example.")
+    parser.add_argument("--checkpoint", type=Path, default=None, help="Optional checkpoint directory or .npz file to load.")
+    parser.add_argument("--no-train", action="store_true", help="Render without running training steps.")
+    return parser.parse_args()
 
 
 class Decoder(spy.InstanceList):
@@ -158,6 +165,8 @@ def render_and_save_checkpoint(module: spy.Module, shader_globals: dict) -> Path
     )
 
 
+args = parse_args()
+
 np.random.seed(RANDOM_SEED)
 
 app = App(
@@ -190,8 +199,9 @@ frame_counter = 0
 optimize_counter = 0
 accumulate = False
 
-if CHECKPOINT_TO_LOAD is not None:
-    optimize_counter = load_checkpoint(network, CHECKPOINT_TO_LOAD)
+checkpoint_to_load = args.checkpoint if args.checkpoint is not None else CHECKPOINT_TO_LOAD
+if checkpoint_to_load is not None:
+    optimize_counter = load_checkpoint(network, checkpoint_to_load)
 
 
 def keyboard_event(event: spy.KeyboardEvent) -> None:
@@ -227,23 +237,24 @@ while app.process_events():
     )
     frame_counter += 1
 
-    for _ in range(TRAIN_STEPS_PER_FRAME):
-        learning_rate = cosine_annealing_learning_rate(optimize_counter)
+    if not args.no_train:
+        for _ in range(TRAIN_STEPS_PER_FRAME):
+            learning_rate = cosine_annealing_learning_rate(optimize_counter)
 
-        module.calculate_grads.set(shader_globals)(
-            seed=optimize_counter,
-            batch_index=spy.grid(BATCH_SIZE),
-            batch_size=spy.int2(BATCH_SIZE),
-        )
-        optimize_counter += 1
-        network.optimize(learning_rate, optimize_counter)
+            module.calculate_grads.set(shader_globals)(
+                seed=optimize_counter,
+                batch_index=spy.grid(BATCH_SIZE),
+                batch_size=spy.int2(BATCH_SIZE),
+            )
+            optimize_counter += 1
+            network.optimize(learning_rate, optimize_counter)
 
-        if optimize_counter % METRIC_INTERVAL == 0:
-            print_log_l1_error(module, shader_globals)
+            if optimize_counter % METRIC_INTERVAL == 0:
+                print_log_l1_error(module, shader_globals)
 
-        if optimize_counter % CHECKPOINT_INTERVAL == 0:
-            checkpoint_dir = render_and_save_checkpoint(module, shader_globals)
-            print(f"[iter {optimize_counter:7d}] checkpoint saved -> {checkpoint_dir}")
+            if optimize_counter % CHECKPOINT_INTERVAL == 0:
+                checkpoint_dir = render_and_save_checkpoint(module, shader_globals)
+                print(f"[iter {optimize_counter:7d}] checkpoint saved -> {checkpoint_dir}")
 
     app.clear()
     app.blit(target_output)

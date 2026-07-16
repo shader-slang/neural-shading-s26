@@ -35,6 +35,14 @@ struct ExampleResources
 
     Slang::String resolveResource(const char* fileName) const
     {
+        // CMake copies each example's shaders under `resources/`, in a
+        // directory named after the example (for example,
+        // `resources/mlp-training/`).
+        Slang::StringBuilder localPath;
+        localPath << "resources/" << baseDir << "/" << fileName;
+        if (Slang::File::exists(localPath.getBuffer()))
+            return localPath.toString();
+
         static const Slang::List<Slang::String> directories{
             "hardware-acceleration",
             "../hardware-acceleration",
@@ -58,6 +66,7 @@ struct ExampleResources
 
 int64_t getCurrentTime();
 int64_t getTimerFrequency();
+rhi::IDebugCallback* getExampleDebugCallback();
 
 template<typename... TArgs>
 inline void reportError(const char* format, TArgs... args)

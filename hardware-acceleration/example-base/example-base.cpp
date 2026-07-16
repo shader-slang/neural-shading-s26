@@ -60,6 +60,12 @@ public:
     }
 };
 
+rhi::IDebugCallback* getExampleDebugCallback()
+{
+    static DebugCallback callback;
+    return &callback;
+}
+
 #ifdef _WIN32
 void _Win32OutputDebugString(const char* str)
 {
