@@ -70,9 +70,9 @@ This course covers the fundamentals of neural shading using Slang. The materials
 - `pillow` - Image processing
 - `scipy` - Fast mesh processing path used by UTracer through `trimesh`
 - `slang` - latest Slang release from https://github.com/shader-slang/slang/releases for autodiff
-- `neural/` and UTracer neural-material examples currently use the Vulkan
-  cooperative-vector path and require Windows or Linux with an NVIDIA GPU.
-  The simpler `mipmap/` and `network/` SlangPy examples run on macOS/Metal.
+- `neural/` examples currently use the Vulkan cooperative-vector path and
+  require Windows or Linux with an NVIDIA GPU. The `mipmap/`, `network/`, and
+  UTracer SlangPy examples run on macOS/Metal.
 
 ### For C++ Examples (hardware-acceleration/)
 - CMake 3.20 or later
@@ -193,7 +193,7 @@ cd hardware-acceleration/build/Release  # or build/ on Linux, this is not suppor
 General Platform Support:
 - **Windows**: Vulkan
 - **Linux**: Vulkan
-- **macOS**: Metal for `mipmap/`, `network/`, autodiff, and the scalar C++ hardware sample
+- **macOS**: Metal for `mipmap/`, `network/`, UTracer, autodiff, and the scalar C++ hardware sample
 
 Hardware Acceleration Examples:
 - **mlp-training**: Windows, Linux, and macOS (uses Vulkan on Windows/Linux, Metal on macOS)
@@ -201,7 +201,8 @@ Hardware Acceleration Examples:
 
 Neural Material and UTracer Examples:
 - **neural/**: Windows and Linux with NVIDIA GPU only
-- **utracer/**: Windows and Linux with NVIDIA GPU only; omit `--checkpoint` for the non-neural scene
+- **utracer/**: Windows, Linux, and macOS. UTracer uses cooperative vectors on
+  Vulkan and the scalar neural-decoder path on Metal.
 
 ## Troubleshooting
 

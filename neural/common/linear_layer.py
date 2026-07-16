@@ -27,19 +27,28 @@ def xavier_scale(inputs: int, outputs: int) -> float:
 
 
 class LinearLayer(spy.InstanceList):
-    def __init__(self, device: spy.Device, module: spy.Module, inputs: int, outputs: int, weight_scale: float | None = None):
+    def __init__(
+        self,
+        device: spy.Device,
+        module: spy.Module,
+        inputs: int,
+        outputs: int,
+        weight_scale: float | None = None,
+        use_coopvec: bool | None = None,
+    ):
         super().__init__(module[f"LinearLayer<{inputs},{outputs}>"])
         self.device = device
         self.module = module
         self.inputs = inputs
         self.outputs = outputs
+        self.use_coopvec = USE_COOPVEC_LINEAR if use_coopvec is None else use_coopvec
 
         if weight_scale is None:
             weight_scale = xavier_scale(inputs, outputs)
         weights = np.random.uniform(-weight_scale, weight_scale, (outputs, inputs)).astype(np.float16)
         biases = np.zeros(outputs, dtype=np.float16)
 
-        if USE_COOPVEC_LINEAR:
+        if self.use_coopvec:
             self._init_coopvec(weights, biases)
         else:
             self._init_tensors(weights, biases)
@@ -128,7 +137,7 @@ class LinearLayer(spy.InstanceList):
         return values.reshape((self.outputs, self.inputs))
 
     def optimize(self, learning_rate: float, iteration: int) -> None:
-        if USE_COOPVEC_LINEAR:
+        if self.use_coopvec:
             self.module.optimizer_step(
                 self.bias_values,
                 self.bias_grad_values,
@@ -164,7 +173,7 @@ class LinearLayer(spy.InstanceList):
             )
 
     def reset_optimizer_state(self) -> None:
-        if USE_COOPVEC_LINEAR:
+        if self.use_coopvec:
             self.bias_grad_values = spy.Tensor.zeros(
                 self.device, (self.bias_count,), "half", usage=self.usage
             )
@@ -189,7 +198,7 @@ class LinearLayer(spy.InstanceList):
             )
 
     def save(self, prefix: str) -> dict[str, np.ndarray]:
-        if USE_COOPVEC_LINEAR:
+        if self.use_coopvec:
             biases = self.bias_values.to_numpy()[: self.outputs]
             weights = self._weights_to_row_major()
         else:
@@ -203,7 +212,7 @@ class LinearLayer(spy.InstanceList):
     def load(self, data: Mapping[str, np.ndarray], prefix: str) -> None:
         biases = data[f"{prefix}_biases"].astype(np.float16)
         weights = data[f"{prefix}_weights"].astype(np.float16)
-        if USE_COOPVEC_LINEAR:
+        if self.use_coopvec:
             self._set_biases(biases)
             self._set_weights_from_row_major(weights)
             self.reset_optimizer_state()
