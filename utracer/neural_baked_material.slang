@@ -75,10 +75,7 @@ public struct NeuralLatentTexture
         int2 c1 = min(c0 + 1, size - 1);
         float2 f = saturate(uv - float2(c0));
 
-        float[kNeuralNumLatents] result = {
-            0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f
-        };
+        float[kNeuralNumLatents] result;
         [ForceUnroll]
         for (int i = 0; i < kNeuralNumLatents; ++i)
         {
