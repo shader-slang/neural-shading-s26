@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 public float adam_update(float primal, float grad, inout float mean, inout float variance, float learning_rate, int iteration)
 {

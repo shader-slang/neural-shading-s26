@@ -1,0 +1,36 @@
+version = 1
+
+[[annotations]]
+path = "**"
+precedence = "closest"
+SPDX-FileCopyrightText = "2024-2026 The Khronos Group, Inc."
+SPDX-License-Identifier = "Apache-2.0 WITH LLVM-exception"
+
+[[annotations]]
+path = [
+  "materials/ceramic/**",
+  "materials/velvet/**",
+  "materials/mdl_runtime.slangh",
+  "materials/mdl_target_code_types.slangh",
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
+SPDX-License-Identifier = "BSD-3-Clause"
+
+[[annotations]]
+path = "data/brown_photostudio_02_2k.hdr"
+precedence = "closest"
+SPDX-FileCopyrightText = "Sergej Majboroda"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "data/shaderball.glb"
+precedence = "closest"
+SPDX-FileCopyrightText = "NONE"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "hardware-acceleration/example-base/core/slang-crypto.cpp"
+precedence = "closest"
+SPDX-FileCopyrightText = "NONE"
+SPDX-License-Identifier = "Unlicense"
