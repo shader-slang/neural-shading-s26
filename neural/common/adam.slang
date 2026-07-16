@@ -28,16 +28,9 @@ public void optimizer_step(inout half primal, inout half grad, inout float mean,
     grad = (half)0.0f;
 }
 
-public void optimizer_step_half_float(inout half primal, inout float grad, inout float mean, inout float variance, float learning_rate, int iteration)
-{
-    half new_p = (half)adam_update(float(primal), grad, mean, variance, learning_rate, iteration);
-    if (!isnan(new_p))
-        primal = new_p;
-    grad = 0.0f;
-}
-
 public void optimizer_step_float(inout float primal, inout float grad, inout float mean, inout float variance, float learning_rate, int iteration)
 {
     primal = adam_update(primal, grad, mean, variance, learning_rate, iteration);
     grad = 0.0f;
 }
+
