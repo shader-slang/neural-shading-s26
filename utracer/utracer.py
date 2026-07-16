@@ -51,7 +51,7 @@ import slangpy.reflection as spyref
 
 from materials.ceramic.mdl_ceramic_material import CeramicMaterial
 from materials.velvet.mdl_velvet_material import VelvetMaterial
-from train.linear_layer import preferred_device_type, validate_device
+from neural.common.linear_layer import preferred_device_type, validate_device
 from .neural_checkpoint import BakedNeuralMaterial, load_baked_neural_material
 
 NON_NEURAL_MATERIAL = 0
