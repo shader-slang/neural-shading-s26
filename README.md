@@ -6,6 +6,10 @@ Materials for the Neural Shading Course at SIGGRAPH 2026. This repository contai
 
 This course covers the fundamentals of neural shading using Slang. The materials include both Python-based examples using `slangpy` and C++ implementations for high-performance neural network training on GPU.
 
+## Course Slides
+
+Download the complete [Introduction to Neural Shading SIGGRAPH 2026 course slides (PDF)](slides/Neural_Shading_Course_Slides_2026.pdf).
+
 ## Directory Structure
 
 ```
@@ -58,7 +62,8 @@ This course covers the fundamentals of neural shading using Slang. The materials
 │
 ├── materials/                            # Ceramic and velvet MDL target materials
 ├── utracer/                              # Minimal SlangPy path tracer and neural-material viewer
-└── data/                                 # Viewer scene and environment assets
+├── data/                                 # Viewer scene and environment assets
+└── slides/                               # Course presentation slides
 ```
 
 ## Prerequisites
