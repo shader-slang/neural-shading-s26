@@ -1,4 +1,7 @@
 version = 1
+SPDX-PackageName = "Neural Shading S26"
+SPDX-PackageSupplier = "The Khronos Group, Inc."
+SPDX-PackageDownloadLocation = "https://github.com/shader-slang/neural-shading-s26"
 
 [[annotations]]
 path = "**"
