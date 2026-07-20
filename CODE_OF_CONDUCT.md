@@ -1,0 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2024-2026 The Khronos Group, Inc.
+SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+-->
+
+A reminder that this repository is managed by the Khronos Group. Interactions
+here should follow the Khronos Code of Conduct
+(https://www.khronos.org/developers/code-of-conduct), which prohibits aggressive
+or derogatory language. Please keep the discussion friendly and civil.
