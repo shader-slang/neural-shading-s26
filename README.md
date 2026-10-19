@@ -90,10 +90,34 @@ Download the complete [Introduction to Neural Shading SIGGRAPH 2026 course slide
 
 ### Python Environment Setup
 
-1. **Install the Python dependencies**:
+1. **Create and activate a virtual environment** (optional, but recommended):
+
+   A virtual environment keeps this course's `slangpy` separate from any other
+   `slangpy` already installed on your system (for example, a `pip install --user`
+   copy), which can be a different version and fail to compile the shaders.
+
+   ```bash
+   # On Windows (PowerShell)
+   python -m venv .venv
+   .venv\Scripts\Activate.ps1
+
+   # On Linux/macOS
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+
+2. **Install the Python dependencies**:
    ```bash
    python -m pip install -r requirements.txt
    ```
+
+   Check that Python picks up the expected `slangpy`:
+   ```bash
+   python -c "import slangpy; print(slangpy.__version__, slangpy.__file__)"
+   ```
+   The version must match the one pinned in `requirements.txt`. `slangpy` bundles
+   its own Slang compiler, so this is the only version that matters; a `slangc`
+   from the Vulkan SDK or `PATH` is not used.
 
 ### C++ Environment Setup
 
